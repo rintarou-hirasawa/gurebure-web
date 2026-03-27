@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Brave Grave</title>
+    <meta property="og:image" content="/image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/image.png" />
+  </head>
+  <body>
+    <div id="root">
+      <div
+        style="
+          box-sizing: border-box;
+          min-height: 100vh;
+          margin: 0;
+          padding: 2rem;
+          font-family: 'Noto Sans JP', system-ui, sans-serif;
+          line-height: 1.6;
+          color: #1e293b;
+          background: #f8fafc;
+        "
+      >
+        <h1 style="font-size: 1.25rem; margin: 0 0 1rem">Brave Grave</h1>
+        <p style="margin: 0 0 0.75rem">
+          この画面がずっと表示される場合、<strong>HTML を直接開いている</strong>可能性があります。
+        </p>
+        <p style="margin: 0 0 0.75rem">
+          プロジェクトフォルダでターミナルを開き、次を実行してからブラウザで
+          <code style="background: #e2e8f0; padding: 0.15rem 0.4rem; border-radius: 4px">http://localhost:5173</code>
+          を開いてください。
+        </p>
+        <pre style="background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow: auto"><code>npm install
+npm run dev</code></pre>
+        <p style="margin: 1rem 0 0; font-size: 0.875rem; color: #64748b">
+          Vite は TypeScript をブラウザがそのまま読めない形式に変換するため、開発時は必ず上記の開発サーバーが必要です。
+        </p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
