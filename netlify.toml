@@ -1,0 +1,9 @@
+# Netlify: Vite のビルド結果を公開し、SPA のクライアントルーティング用にリライトする
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
