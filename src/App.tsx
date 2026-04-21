@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
-import { Sword, Plus, Gamepad2, LogOut } from 'lucide-react';
+import { Sword, Plus, Gamepad2, LogOut, LogIn } from 'lucide-react';
 import CardSearchPage from './pages/CardSearchPage';
 import DeckBuilder from './components/deck/DeckBuilder';
 import { MatchmakingPage } from './pages/MatchmakingPage';
@@ -10,9 +10,13 @@ import LobbyPage from './pages/LobbyPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { POST_LOGIN_REDIRECT_KEY } from './lib/auth';
 
+/** デッキ作成・オンライン対戦など、ログイン後に戻るパス（OAuth 後も保持するため sessionStorage） */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--sp-muted)]">
@@ -21,22 +25,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
   if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-}
-
-/** 本番はログイン必須。開発時は UI / デバッグのため未ログインでもオンライン対戦フローに入れる */
-function OnlineFlowRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--sp-muted)]">
-        読み込み中…
-      </div>
-    );
-  }
-  if (!user && !import.meta.env.DEV) {
+    try {
+      sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, location.pathname + location.search);
+    } catch {
+      /* ignore */
+    }
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
@@ -81,7 +74,7 @@ function Header() {
             </nav>
           </div>
 
-          {user && (
+          {user ? (
             <div className="flex items-center gap-4 flex-wrap">
               <span className="text-sm text-[var(--sp-parchment)]">
                 ユーザー: <span className="font-bold text-[var(--sp-ink)]">{user.user_id}</span>
@@ -95,6 +88,14 @@ function Header() {
                 ログアウト
               </button>
             </div>
+          ) : (
+            <Link
+              to="/login"
+              className="sp-btn sp-btn--primary flex items-center gap-2 text-sm"
+            >
+              <LogIn className="h-4 w-4" />
+              ログイン
+            </Link>
           )}
         </div>
       </div>
@@ -130,41 +131,41 @@ function AppShellWithHeader() {
         <Route
           path="/matchmaking"
           element={
-            <OnlineFlowRoute>
+            <ProtectedRoute>
               <MatchmakingPage />
-            </OnlineFlowRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/create-room"
           element={
-            <OnlineFlowRoute>
+            <ProtectedRoute>
               <CreateRoomPage />
-            </OnlineFlowRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/join-room"
           element={
-            <OnlineFlowRoute>
+            <ProtectedRoute>
               <JoinRoomPage />
-            </OnlineFlowRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/lobby"
           element={
-            <OnlineFlowRoute>
+            <ProtectedRoute>
               <LobbyPage />
-            </OnlineFlowRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/game"
           element={
-            <OnlineFlowRoute>
+            <ProtectedRoute>
               <GamePageNew />
-            </OnlineFlowRoute>
+            </ProtectedRoute>
           }
         />
         </Routes>

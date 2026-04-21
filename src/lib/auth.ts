@@ -1,6 +1,21 @@
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
+/** 未ログインで保護ページへ来たときの戻り先（Google OAuth の往復でも sessionStorage は残る） */
+export const POST_LOGIN_REDIRECT_KEY = 'postLoginRedirect';
+
+/** ログイン成功後の遷移先。保存がなければ /matchmaking。オープンリダイレクト防止のため先頭 `/` のみ許可 */
+export function takePostLoginRedirectPath(): string {
+  try {
+    const v = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+    if (v && v.startsWith('/') && !v.startsWith('//')) return v;
+  } catch {
+    /* ignore */
+  }
+  return '/matchmaking';
+}
+
 export interface User {
   id: string;
   user_id: string;

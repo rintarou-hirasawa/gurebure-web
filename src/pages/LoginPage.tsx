@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { login, register, signInWithGoogle } from '../lib/auth';
+import { login, register, signInWithGoogle, takePostLoginRedirectPath } from '../lib/auth';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -55,7 +55,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/matchmaking', { replace: true });
+      navigate(takePostLoginRedirectPath(), { replace: true });
     }
   }, [authLoading, user, navigate]);
 
@@ -84,7 +84,7 @@ export function LoginPage() {
 
     if (result.success) {
       await refreshUser();
-      navigate('/matchmaking');
+      // 遷移は user 更新後の useEffect（takePostLoginRedirectPath）に任せる
     } else {
       setError(result.error || '処理に失敗しました');
     }
@@ -100,10 +100,17 @@ export function LoginPage() {
     }
   };
 
+  const oauthReturning = new URLSearchParams(location.search).has('code');
+
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--sp-bg)] p-4 text-sm text-[var(--sp-muted)]">
-        読み込み中…
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-[var(--sp-bg)] p-4 text-sm text-[var(--sp-muted)]">
+        <span>{oauthReturning ? 'Google ログインを確定しています…' : '読み込み中…'}</span>
+        {oauthReturning && (
+          <span className="max-w-sm text-center text-xs text-[var(--sp-muted)]">
+            認証コードの検証と Supabase への接続のため、数秒かかることがあります。
+          </span>
+        )}
       </div>
     );
   }
