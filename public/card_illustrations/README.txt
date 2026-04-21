@@ -1,6 +1,16 @@
 【カード画像はこのフォルダと src/lib/cardImageManifest.ts だけで完結します】
 
-■ 手順
+■ 一弾（正規版）カード
+  - ファイル名は DB の cards.name と同じにし、拡張子は .jpg を推奨（例: エナジーボール.jpg）
+  - マニフェストでは「カード名」と「カード名.jpg」が対応済み
+  - LINE アルバム連番（LINE_ALBUM_第1弾プロキシ…_1.jpg ～ _40.jpg）を一括で
+    「カード名.jpg」にコピーする場合（1枚目＝エナジーボール … 40枚目＝閉ざされし暗黒の扉）:
+        npm run card-images:import-first-expansion-album
+    （画像は public または dist の card_illustrations に置いてから実行）
+  - 旧ファイル（別名の PNG 等）を消す場合:
+        npm run card-images:prune-first-expansion-legacy
+
+■ 手順（二弾以降・個別名のとき）
   1. 画像ファイルをこのフォルダ（card_illustrations）に置く
      対応形式: .jpg .jpeg .png .webp
   2. src/lib/cardImageManifest.ts を開き、次の形式で 1 行ずつ追加する

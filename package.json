@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "db:sql": "node scripts/run-sql.mjs",
     "db:migrate": "node scripts/apply-migrations.mjs",
-    "card-images:status": "node scripts/card-images-status.mjs"
+    "card-images:status": "node scripts/card-images-status.mjs",
+    "card-images:prune-first-expansion-legacy": "node scripts/prune-legacy-first-expansion-images.mjs",
+    "card-images:import-first-expansion-album": "node scripts/import-first-expansion-line-album.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

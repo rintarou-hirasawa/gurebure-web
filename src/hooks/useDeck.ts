@@ -172,7 +172,6 @@ export function useDeck(deckId?: string | null) {
       } else {
         const existingNonU = deckCards.find(dc => dc.card_id === card.id);
         if (existingNonU && existingNonU.quantity >= 4) {
-          setError('カードは最大4枚までです');
           return;
         }
       }

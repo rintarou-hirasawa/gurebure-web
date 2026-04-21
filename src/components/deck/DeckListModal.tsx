@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { X } from 'lucide-react';
+import type { Card } from '../../types/card';
 import { DeckCard } from '../../types/deck';
 import { CardImage } from '../CardImage';
+import CardDetailModal from '../CardDetailModal';
 
 interface DeckListModalProps {
   isOpen: boolean;
@@ -15,6 +18,8 @@ export default function DeckListModal({
   deckName,
   deckCards,
 }: DeckListModalProps) {
+  const [detailCard, setDetailCard] = useState<Card | null>(null);
+
   if (!isOpen) return null;
 
   const sortedCards = [...deckCards]
@@ -27,6 +32,7 @@ export default function DeckListModal({
     });
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2">
       <div className="sp-modal-surface relative flex h-full max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg">
         <button
@@ -48,15 +54,18 @@ export default function DeckListModal({
             <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-8 gap-0.5 sm:gap-1">
               {sortedCards.map((deckCard) =>
                 Array.from({ length: deckCard.quantity }).map((_, idx) => (
-                  <div
+                  <button
                     key={`${deckCard.card!.id}-${idx}`}
-                    className="aspect-[63/88] w-[11vw] overflow-hidden rounded-sm border border-[var(--sp-border)] bg-[var(--sp-panel-elevated)] shadow-sm sm:w-[8vw] md:w-[7vw] lg:w-[6vw]"
+                    type="button"
+                    title="カード詳細"
+                    onClick={() => setDetailCard(deckCard.card!)}
+                    className="aspect-[63/88] w-[11vw] overflow-hidden rounded-sm border border-[var(--sp-border)] bg-[var(--sp-panel-elevated)] shadow-sm transition hover:ring-2 hover:ring-green-400/40 sm:w-[8vw] md:w-[7vw] lg:w-[6vw]"
                   >
                     <CardImage
                       card={deckCard.card!}
                       className="h-full w-full object-cover"
                     />
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -64,5 +73,7 @@ export default function DeckListModal({
         </div>
       </div>
     </div>
+    <CardDetailModal card={detailCard} onClose={() => setDetailCard(null)} />
+    </>
   );
 }

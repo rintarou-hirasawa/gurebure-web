@@ -22,6 +22,22 @@ export interface User {
   created_at: string;
 }
 
+/** localhost / 127.0.0.1 または VITE_AUTH_BYPASS=true のときログイン不要（Google OAuth なしで開発） */
+export function isAuthBypassEnabled(): boolean {
+  if (import.meta.env.VITE_AUTH_BYPASS === 'false') return false;
+  if (import.meta.env.VITE_AUTH_BYPASS === 'true') return true;
+  if (typeof window === 'undefined') return false;
+  const h = window.location.hostname;
+  return h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+}
+
+/** バイパス時の仮ユーザー（decks.user_id に保存する UUID。DB の FK 不要な運用向け） */
+export const DEV_LOCAL_USER: User = {
+  id: '00000000-0000-4000-8000-000000000001',
+  user_id: 'local-dev',
+  created_at: '1970-01-01T00:00:00.000Z',
+};
+
 function getStoredUser(): User | null {
   const userStr = localStorage.getItem('currentUser');
   if (!userStr) return null;
@@ -34,6 +50,10 @@ function getStoredUser(): User | null {
 
 /** Supabase セッション（Google 等）と localStorage（ID/パスワード）の両方を解決 */
 export async function loadUserFromStorageAndSession(): Promise<User | null> {
+  if (isAuthBypassEnabled()) {
+    return DEV_LOCAL_USER;
+  }
+
   if (typeof window !== 'undefined') {
     const code = new URLSearchParams(window.location.search).get('code');
     if (code) {
@@ -48,9 +68,17 @@ export async function loadUserFromStorageAndSession(): Promise<User | null> {
     }
   }
 
+  const sessionResult = await Promise.race([
+    supabase.auth.getSession(),
+    new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 12000)),
+  ]);
+  if (sessionResult === 'timeout') {
+    console.warn('auth.getSession() がタイムアウトしました。localStorage のユーザーを試します。');
+    return getStoredUser();
+  }
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = sessionResult;
   if (session?.user) {
     const u = await ensurePublicUserRow(session.user);
     if (u) return u;

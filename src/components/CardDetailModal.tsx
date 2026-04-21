@@ -7,6 +7,8 @@ import { getCardImageSrc } from '../lib/cardImage';
 interface CardDetailModalProps {
   card: Card | null;
   onClose: () => void;
+  /** 他モーダル（対戦画面など）より前面に出すとき用 */
+  className?: string;
 }
 
 const cardTypeColors: Record<string, string> = {
@@ -16,7 +18,7 @@ const cardTypeColors: Record<string, string> = {
   装備: 'bg-emerald-50 text-emerald-900 border-emerald-200',
 };
 
-export default function CardDetailModal({ card, onClose }: CardDetailModalProps) {
+export default function CardDetailModal({ card, onClose, className }: CardDetailModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -54,7 +56,7 @@ export default function CardDetailModal({ card, onClose }: CardDetailModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 ${className ?? ''}`}
       onClick={onClose}
     >
       <div

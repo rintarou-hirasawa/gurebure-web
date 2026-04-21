@@ -1,10 +1,13 @@
 import { DeckCard } from '../../types/deck';
+import type { Card } from '../../types/card';
 import { Star, X } from 'lucide-react';
 import { CardImage } from '../CardImage';
 
 interface DeckCardListProps {
   deckCards: DeckCard[];
   onRemoveCard: (deckCardId: string) => void;
+  /** サムネイルタップでカード詳細（削除ボタン以外） */
+  onViewCard?: (card: Card) => void;
   /** 左右分割レイアウト用：サムネを詰めて一覧性を上げる */
   compact?: boolean;
   /** カード名の下段を非表示（高さを抑えて一覧を画面内に収める） */
@@ -19,6 +22,7 @@ const cardThumbClass = (compact: boolean) =>
 export default function DeckCardList({
   deckCards,
   onRemoveCard,
+  onViewCard,
   compact = false,
   showNames = true,
 }: DeckCardListProps) {
@@ -50,24 +54,34 @@ export default function DeckCardList({
     );
   }
 
-  /** デッキビルダー左：横8×縦5（40枚まで）をパネル高に収め、超過分は縦スクロール */
-  const fitFiveRows = compact && slots.length <= 40;
+  /**
+   * コンパクトは常に auto-rows + aspect で高さを決める。
+   * 以前の h-full + grid-rows-5 は親の高さが未定義だと行高 0 になりサムネが消える（モバイルで多発）。
+   */
   const gridClass = compact
-    ? fitFiveRows
-      ? 'grid h-full min-h-0 w-full grid-cols-8 grid-rows-5 gap-px'
-      : 'grid w-full auto-rows-min grid-cols-8 gap-px'
+    ? 'grid w-full auto-rows-min grid-cols-8 gap-px'
     : 'grid grid-cols-7 gap-1 sm:grid-cols-8 sm:gap-1.5 md:grid-cols-10 lg:grid-cols-12';
-
-  const thumbClassForSlot = (compact: boolean) =>
-    compact && fitFiveRows
-      ? 'relative h-full w-full min-h-0 rounded-sm overflow-hidden border border-[var(--sp-border)] transition-colors hover:border-[var(--sp-brass-dim)] active:scale-95'
-      : cardThumbClass(compact);
 
   return (
     <div className={gridClass}>
       {slots.map(({ deckCardId, card, key }) => (
         <div key={key} className="group relative min-h-0 min-w-0" title={card.name}>
-          <div className={thumbClassForSlot(compact)}>
+          <div
+            className={`${cardThumbClass(compact)} ${onViewCard ? 'cursor-zoom-in' : ''}`}
+            onClick={() => onViewCard?.(card)}
+            role={onViewCard ? 'button' : undefined}
+            tabIndex={onViewCard ? 0 : undefined}
+            onKeyDown={
+              onViewCard
+                ? (ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      ev.preventDefault();
+                      onViewCard(card);
+                    }
+                  }
+                : undefined
+            }
+          >
             <CardImage card={card} className="h-full w-full object-cover" />
             {card.is_unique && (
               <div
@@ -86,8 +100,11 @@ export default function DeckCardList({
             )}
             <button
               type="button"
-              onClick={() => onRemoveCard(deckCardId)}
-              className={`absolute rounded border border-[#7a2e24] bg-[var(--sp-rust)] text-white opacity-100 transition-opacity active:brightness-90 sm:opacity-0 sm:group-hover:opacity-100 ${compact ? 'right-0 top-0 p-0.5' : 'right-0.5 top-0.5 p-1 sm:right-1 sm:top-1'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveCard(deckCardId);
+              }}
+              className={`absolute z-[1] rounded border border-[#7a2e24] bg-[var(--sp-rust)] text-white opacity-100 transition-opacity active:brightness-90 sm:opacity-0 sm:group-hover:opacity-100 ${compact ? 'right-0 top-0 p-0.5' : 'right-0.5 top-0.5 p-1 sm:right-1 sm:top-1'}`}
               title="1枚削除"
             >
               <X className={compact ? 'h-2 w-2' : 'h-2.5 w-2.5 sm:h-3 sm:w-3'} />

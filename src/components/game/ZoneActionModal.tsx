@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Star, Sword, Zap, Shield } from 'lucide-react';
 import { CardInGame, Zone } from '../../types/game';
 import { CardImage } from '../CardImage';
+import CardDetailModal from '../CardDetailModal';
 
 interface ZoneActionModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export function ZoneActionModal({
   const [forceViewCards, setForceViewCards] = useState(false);
   const [cardDetailModal, setCardDetailModal] = useState<CardInGame | null>(null);
 
-  const showDetailButton = zone !== 'shields' && zone !== 'deck';
+  const showDetailButton = canViewCards;
 
   if (!isOpen) return null;
 
@@ -111,6 +112,10 @@ export function ZoneActionModal({
                       className={`relative overflow-hidden rounded ${
                         isSelected ? 'ring-1 ring-black/25' : ''
                       }`}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (canViewCards) setCardDetailModal(card);
+                      }}
                     >
                       <CardImage
                         card={card}
@@ -197,81 +202,7 @@ export function ZoneActionModal({
         </div>
       </div>
 
-      {cardDetailModal && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setCardDetailModal(null)}
-        >
-          <div
-            className="sp-modal-surface max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--sp-border)] bg-[var(--sp-panel)] p-4"
-            >
-              <h2 className="text-xl font-bold text-[var(--sp-ink)]">カード詳細</h2>
-              <button
-                type="button"
-                onClick={() => setCardDetailModal(null)}
-                className="rounded-lg border border-transparent p-2 text-[var(--sp-muted)] transition-colors hover:border-[var(--sp-border)] hover:bg-green-50"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="mb-4 text-2xl font-semibold text-[var(--sp-ink)]">{cardDetailModal.name}</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex border-b border-[var(--sp-border)] pb-2">
-                    <span className="w-32 font-semibold text-[var(--sp-muted)]">種類:</span>
-                    <span className="text-[var(--sp-ink)]">{cardDetailModal.type}</span>
-                  </div>
-                  <div className="flex border-b border-[var(--sp-border)] pb-2">
-                    <span className="w-32 font-semibold text-[var(--sp-muted)]">文明:</span>
-                    <span className="text-[var(--sp-ink)]">{cardDetailModal.civilization}</span>
-                  </div>
-                  <div className="flex border-b border-[var(--sp-border)] pb-2">
-                    <span className="w-32 font-semibold text-[var(--sp-muted)]">コスト:</span>
-                    <span className="text-[var(--sp-ink)]">{cardDetailModal.cost}</span>
-                  </div>
-                  {cardDetailModal.power && (
-                    <div className="flex border-b border-[var(--sp-border)] pb-2">
-                      <span className="w-32 font-semibold text-[var(--sp-muted)]">パワー:</span>
-                      <span className="text-[var(--sp-ink)]">{cardDetailModal.power}</span>
-                    </div>
-                  )}
-                  {cardDetailModal.race && (
-                    <div className="flex border-b border-[var(--sp-border)] pb-2">
-                      <span className="w-32 font-semibold text-[var(--sp-muted)]">種族:</span>
-                      <span className="text-[var(--sp-ink)]">{cardDetailModal.race}</span>
-                    </div>
-                  )}
-                  <div className="flex border-b border-[var(--sp-border)] pb-2">
-                    <span className="w-32 font-semibold text-[var(--sp-muted)]">レアリティ:</span>
-                    <span className="text-[var(--sp-ink)]">{cardDetailModal.rarity}</span>
-                  </div>
-                  <div className="flex border-b border-[var(--sp-border)] pb-2">
-                    <span className="w-32 font-semibold text-[var(--sp-muted)]">拡張:</span>
-                    <span className="text-[var(--sp-ink)]">{cardDetailModal.expansion}</span>
-                  </div>
-                </div>
-                {cardDetailModal.ability && (
-                  <div className="mt-6">
-                    <h4 className="mb-3 text-lg font-semibold text-[var(--sp-ink)]">カード効果:</h4>
-                    <div className="rounded-lg border border-green-200 bg-green-50/80 p-4">
-                      <p className="whitespace-pre-wrap leading-relaxed text-[var(--sp-ink)]">
-                        {cardDetailModal.ability}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CardDetailModal card={cardDetailModal} onClose={() => setCardDetailModal(null)} />
     </div>
   );
 }

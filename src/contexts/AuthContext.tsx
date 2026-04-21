@@ -10,6 +10,7 @@ import {
 import { supabase } from '../lib/supabase';
 import {
   ensurePublicUserRow,
+  isAuthBypassEnabled,
   loadUserFromStorageAndSession,
   type User,
 } from '../lib/auth';
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser]);
 
   useEffect(() => {
+    if (isAuthBypassEnabled()) return;
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -74,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logoutUser = useCallback(async () => {
+    if (isAuthBypassEnabled()) {
+      return;
+    }
     localStorage.removeItem('currentUser');
     await supabase.auth.signOut();
     setUser(null);

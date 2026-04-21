@@ -2,9 +2,14 @@ import { Card } from './card';
 
 export type Zone = 'deck' | 'hand' | 'mana' | 'battle' | 'graveyard' | 'shields';
 
+/** 山札確認エリアからの移動先（オンライン対戦・山札操作） */
+export type DeckRevealDestination = 'battle' | 'mana' | 'graveyard' | 'shields' | 'deckTop' | 'deckBottom';
+
 export interface CardInGame extends Card {
   instanceId: string;
   tapped?: boolean;
+  /** 山札確認で裏向きのとき true（画像は裏面表示） */
+  faceDown?: boolean;
 }
 
 export interface PlayerState {
@@ -16,6 +21,10 @@ export interface PlayerState {
   battle: CardInGame[];
   graveyard: CardInGame[];
   shields: CardInGame[];
+  /** 山札から確認中のカード（オンライン対戦の山札操作） */
+  deckReveal?: CardInGame[];
+  /** 一枚ずつ確認モード（移動後に次の1枚を自動でめくる） */
+  deckRevealOneByOne?: boolean;
 }
 
 export interface GameState {

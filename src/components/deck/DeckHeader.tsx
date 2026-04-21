@@ -47,13 +47,13 @@ export default function DeckHeader({
 
   return (
     <div className="shrink-0 border-b border-[var(--sp-border)] bg-[var(--sp-panel)] text-[var(--sp-ink)]">
-      <div className="container mx-auto px-2 py-2 sm:px-4 sm:py-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="container mx-auto px-2 py-1.5 sm:px-4 sm:py-3">
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
           <div>
-            <div className="sp-display text-lg font-semibold tracking-tight text-[var(--sp-ink)] sm:text-2xl">
+            <div className="sp-display text-base font-semibold tracking-tight text-[var(--sp-ink)] sm:text-2xl">
               デッキ作成
             </div>
-            <p className="mt-1 text-xs text-[var(--sp-muted)] sm:text-sm">
+            <p className="mt-0.5 hidden text-xs text-[var(--sp-muted)] sm:mt-1 sm:block sm:text-sm">
               カードは追加時に自動保存されます
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function DeckHeader({
           </div>
         </div>
 
-        <div className="mt-2 flex flex-col gap-2 sm:mt-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="mt-1.5 flex flex-col gap-1.5 sm:mt-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <label className="whitespace-nowrap text-xs text-[var(--sp-muted)] sm:text-sm">デッキ名:</label>
             <input
@@ -131,11 +131,6 @@ export default function DeckHeader({
               <span className="font-bold text-[var(--sp-ink)]">{stats.uniqueCount}</span>
               <span className="text-[var(--sp-muted)]"> 枚</span>
             </div>
-            {stats.mainDeckCount > 0 && stats.uniqueCount < 1 && (
-              <span className="rounded border border-green-300 bg-green-100 px-2 py-1 text-green-900">
-                ユニークを1枚入れてください
-              </span>
-            )}
           </div>
         </div>
       </div>

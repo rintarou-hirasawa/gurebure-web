@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, type MutableRefObject } from 'react';
 import { Star, Sword, Zap, Shield, Info, Wrench, Gem, Package } from 'lucide-react';
-import { GameState, CardInGame, Zone } from '../../types/game';
+import { GameState, CardInGame, Zone, DeckRevealDestination } from '../../types/game';
 import { ZoneActionModal } from './ZoneActionModal';
+import { DeckOperationModal } from './DeckOperationModal';
 import { GameLogEntry } from '../../types/room';
 import { CardImage } from '../CardImage';
+import CardDetailModal from '../CardDetailModal';
 
 interface GameBoardNewProps {
   gameState: GameState;
@@ -19,6 +21,11 @@ interface GameBoardNewProps {
   onAddToManaFromDeck: () => void;
   onBreakShield: (targetPlayer: 1 | 2, selectedCard?: CardInGame) => void;
   onMoveCardToZone: (card: CardInGame, fromZone: Zone, toZone: Zone, fromPlayer: 1 | 2, toPlayer: 1 | 2) => void;
+  onShuffleDeck: () => void;
+  onRevealDeckMulti: (params: { count: number; fromTop: boolean; faceUp: boolean }) => void;
+  onStartDeckRevealOneByOne: () => void;
+  onMoveCardsFromDeckReveal: (cardIds: string[], destination: DeckRevealDestination) => void;
+  onCloseDeckOperation: () => void | Promise<void>;
 }
 
 export function GameBoardNew({
@@ -34,7 +41,12 @@ export function GameBoardNew({
   onDrawCard,
   onAddToManaFromDeck,
   onBreakShield,
-  onMoveCardToZone
+  onMoveCardToZone,
+  onShuffleDeck,
+  onRevealDeckMulti,
+  onStartDeckRevealOneByOne,
+  onMoveCardsFromDeckReveal,
+  onCloseDeckOperation
 }: GameBoardNewProps) {
   const [selectedZone, setSelectedZone] = useState<{
     zone: Zone;
@@ -731,23 +743,37 @@ export function GameBoardNew({
                 <div className="mb-1.5 text-center text-sm font-bold text-white lg:text-lg">バトルゾーン</div>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {opponentState.battle.map((card) => (
-                    <div
-                      key={card.instanceId}
-                      className={`shrink-0 cursor-pointer ${card.tapped ? 'opacity-50' : ''}`}
-                      onClick={(e) => {
-                        if (e.detail === 1) {
-                          setSelectedZone({ zone: 'battle', player: opponentNumber });
-                        } else if (e.detail === 2) {
+                    <div key={card.instanceId} className={`relative shrink-0 ${card.tapped ? 'opacity-50' : ''}`}>
+                      <button
+                        type="button"
+                        title="カード詳細"
+                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-500/80 bg-slate-900/95 text-green-300 shadow-md hover:bg-slate-800 hover:text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setCardDetailModal(card);
-                        }
-                      }}
-                    >
-                      <div className={battleCardWrapClass}>
-                        <CardImage
-                          card={card}
-                          className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
-                        />
-                        {renderBattleZoneCardMarks(card)}
+                        }}
+                      >
+                        <Info className="h-4 w-4" strokeWidth={2.5} />
+                      </button>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedZone({ zone: 'battle', player: opponentNumber })}
+                        onKeyDown={(ev) => {
+                          if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            setSelectedZone({ zone: 'battle', player: opponentNumber });
+                          }
+                        }}
+                      >
+                        <div className={battleCardWrapClass}>
+                          <CardImage
+                            card={card}
+                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
+                          />
+                          {renderBattleZoneCardMarks(card)}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -771,23 +797,37 @@ export function GameBoardNew({
                 <div className="mb-1.5 text-center text-sm font-bold text-white lg:text-lg">バトルゾーン</div>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {myState.battle.map((card) => (
-                    <div
-                      key={card.instanceId}
-                      className={`shrink-0 cursor-pointer ${card.tapped ? 'opacity-50' : ''}`}
-                      onClick={(e) => {
-                        if (e.detail === 1) {
-                          setSelectedZone({ zone: 'battle', player: playerNumber });
-                        } else if (e.detail === 2) {
+                    <div key={card.instanceId} className={`relative shrink-0 ${card.tapped ? 'opacity-50' : ''}`}>
+                      <button
+                        type="button"
+                        title="カード詳細"
+                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-500/80 bg-slate-900/95 text-green-300 shadow-md hover:bg-slate-800 hover:text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setCardDetailModal(card);
-                        }
-                      }}
-                    >
-                      <div className={battleCardWrapClass}>
-                        <CardImage
-                          card={card}
-                          className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
-                        />
-                        {renderBattleZoneCardMarks(card)}
+                        }}
+                      >
+                        <Info className="h-4 w-4" strokeWidth={2.5} />
+                      </button>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedZone({ zone: 'battle', player: playerNumber })}
+                        onKeyDown={(ev) => {
+                          if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            setSelectedZone({ zone: 'battle', player: playerNumber });
+                          }
+                        }}
+                      >
+                        <div className={battleCardWrapClass}>
+                          <CardImage
+                            card={card}
+                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
+                          />
+                          {renderBattleZoneCardMarks(card)}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1077,6 +1117,16 @@ export function GameBoardNew({
           <div className="flex flex-col gap-1">
             <button
               type="button"
+              className="rounded-md border border-slate-500 bg-slate-800 px-2 py-1.5 text-left text-xs font-semibold text-slate-200 hover:bg-slate-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCardDetailModal(handManaMenu.card);
+              }}
+            >
+              カード詳細を見る
+            </button>
+            <button
+              type="button"
               className="rounded-md bg-green-600 px-2 py-1.5 text-left text-xs font-bold text-white hover:bg-green-500"
               onClick={(e) => {
                 e.stopPropagation();
@@ -1119,7 +1169,28 @@ export function GameBoardNew({
         </div>
       )}
 
-      {selectedZone && (
+      {selectedZone &&
+        selectedZone.zone === 'deck' &&
+        selectedZone.player === playerNumber &&
+        !isSpectator && (
+          <DeckOperationModal
+            isOpen
+            onClose={() => {
+              void onCloseDeckOperation();
+              setSelectedZone(null);
+            }}
+            deckCount={myState.deck.length}
+            deckReveal={myState.deckReveal}
+            deckRevealOneByOne={myState.deckRevealOneByOne}
+            onShuffle={onShuffleDeck}
+            onRevealMulti={onRevealDeckMulti}
+            onStartOneByOne={onStartDeckRevealOneByOne}
+            onMoveRevealToZone={(ids, dest) => onMoveCardsFromDeckReveal(ids, dest)}
+            onOpenCardDetail={(c) => setCardDetailModal(c)}
+          />
+        )}
+
+      {selectedZone && !(selectedZone.zone === 'deck' && selectedZone.player === playerNumber && !isSpectator) && (
         <ZoneActionModal
           isOpen={true}
           onClose={() => setSelectedZone(null)}
@@ -1150,60 +1221,7 @@ export function GameBoardNew({
         />
       )}
 
-      {cardDetailModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setCardDetailModal(null)}
-        >
-          <div
-            className="sp-modal-surface max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-[var(--sp-ink)]">{cardDetailModal.name}</h2>
-              <div className="space-y-3 text-sm text-[var(--sp-ink)]">
-                <p>
-                  <span className="font-semibold text-[var(--sp-muted)]">種類:</span> {cardDetailModal.type}
-                </p>
-                <p>
-                  <span className="font-semibold text-[var(--sp-muted)]">コスト:</span> {cardDetailModal.cost}
-                </p>
-                {cardDetailModal.power != null && (
-                  <p>
-                    <span className="font-semibold text-[var(--sp-muted)]">パワー:</span> {cardDetailModal.power}
-                  </p>
-                )}
-                {cardDetailModal.race && (
-                  <p>
-                    <span className="font-semibold text-[var(--sp-muted)]">種族:</span> {cardDetailModal.race}
-                  </p>
-                )}
-                {cardDetailModal.civilization && (
-                  <p>
-                    <span className="font-semibold text-[var(--sp-muted)]">文明:</span>{' '}
-                    {cardDetailModal.civilization}
-                  </p>
-                )}
-                {(cardDetailModal.ability || cardDetailModal.effect_text) && (
-                  <div className="mt-4 rounded-lg border border-green-200 bg-green-50/90 p-4">
-                    <p className="mb-2 font-semibold text-[var(--sp-ink)]">効果テキスト</p>
-                    <p className="whitespace-pre-wrap leading-relaxed text-[var(--sp-ink)]">
-                      {cardDetailModal.ability || cardDetailModal.effect_text}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setCardDetailModal(null)}
-                className="sp-btn sp-btn--primary mt-4 w-full justify-center rounded-lg py-2"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CardDetailModal card={cardDetailModal} onClose={() => setCardDetailModal(null)} />
 
       {gameState.gameOver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

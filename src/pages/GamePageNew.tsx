@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { GameBoardNew } from '../components/game/GameBoardNew';
 import { GameMatch, GameLogEntry } from '../types/room';
-import { GameState, CardInGame, Zone } from '../types/game';
+import { GameState, CardInGame, Zone, DeckRevealDestination } from '../types/game';
 import { Loader2 } from 'lucide-react';
 import { useScreenOrientationLock } from '../hooks/useScreenOrientationLock';
 import { useMatchPortraitNudge } from '../hooks/useMatchPortraitNudge';
@@ -496,6 +496,154 @@ export function GamePageNew() {
     return names[zone] || zone;
   };
 
+  const stripFaceDown = (c: CardInGame): CardInGame => {
+    const { faceDown: _fd, ...rest } = c;
+    return rest as CardInGame;
+  };
+
+  const shuffleDeck = async () => {
+    const base = gameStateRef.current;
+    if (!base || isSpectator || playerNumber == null) return;
+    const newState = { ...base };
+    const ps = playerNumber === 1 ? newState.player1 : newState.player2;
+    if (ps.deck.length === 0) return;
+    const d = [...ps.deck];
+    for (let i = d.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [d[i], d[j]] = [d[j], d[i]];
+    }
+    ps.deck = d;
+    await updateGameState(newState);
+    const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
+    await addLogEntry({
+      timestamp: new Date().toISOString(),
+      player: playerIdForLog,
+      action: '山札をシャッフル'
+    });
+  };
+
+  const revealDeckMulti = async (params: { count: number; fromTop: boolean; faceUp: boolean }) => {
+    const base = gameStateRef.current;
+    if (!base || isSpectator || playerNumber == null) return;
+    const newState = { ...base };
+    const ps = playerNumber === 1 ? newState.player1 : newState.player2;
+    const n = Math.min(params.count, ps.deck.length);
+    if (n <= 0) return;
+    let taken: CardInGame[];
+    if (params.fromTop) {
+      taken = ps.deck.splice(0, n);
+    } else {
+      taken = ps.deck.splice(-n, n);
+    }
+    ps.deckReveal = taken.map(c => ({ ...c, faceDown: !params.faceUp }));
+    ps.deckRevealOneByOne = false;
+    await updateGameState(newState);
+    const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
+    await addLogEntry({
+      timestamp: new Date().toISOString(),
+      player: playerIdForLog,
+      action: `山札確認: ${n}枚を${params.fromTop ? '上' : '下'}から${params.faceUp ? '表向き' : '裏向き'}で確認`
+    });
+  };
+
+  const startDeckRevealOneByOne = async () => {
+    const base = gameStateRef.current;
+    if (!base || isSpectator || playerNumber == null) return;
+    const newState = { ...base };
+    const ps = playerNumber === 1 ? newState.player1 : newState.player2;
+    if (ps.deck.length === 0) return;
+    const [c] = ps.deck.splice(0, 1);
+    ps.deckReveal = [{ ...c, faceDown: false }];
+    ps.deckRevealOneByOne = true;
+    await updateGameState(newState);
+    const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
+    await addLogEntry({
+      timestamp: new Date().toISOString(),
+      player: playerIdForLog,
+      action: '山札確認: 一枚ずつ確認を開始'
+    });
+  };
+
+  const moveCardsFromDeckReveal = async (cardIds: string[], destination: DeckRevealDestination) => {
+    const base = gameStateRef.current;
+    if (!base || isSpectator || playerNumber == null) return;
+    const newState = { ...base };
+    const ps = playerNumber === 1 ? newState.player1 : newState.player2;
+    const reveal = ps.deckReveal ?? [];
+    const idSet = new Set(cardIds);
+    const toMove = reveal.filter(c => idSet.has(c.instanceId));
+    if (toMove.length === 0) return;
+
+    ps.deckReveal = reveal.filter(c => !idSet.has(c.instanceId));
+
+    for (const card of toMove) {
+      const clean = stripFaceDown(card);
+      if (destination === 'battle') {
+        const effective = resolveBattlePlayDestination(clean, 'battle');
+        if (effective === 'graveyard') {
+          ps.graveyard.push(clean);
+        } else {
+          ps.battle.push(clean);
+        }
+      } else if (destination === 'mana') {
+        ps.mana.push(clean);
+      } else if (destination === 'graveyard') {
+        ps.graveyard.push(clean);
+      } else if (destination === 'shields') {
+        ps.shields.push(clean);
+      } else if (destination === 'deckTop') {
+        ps.deck.unshift(clean);
+      } else if (destination === 'deckBottom') {
+        ps.deck.push(clean);
+      }
+    }
+
+    if (ps.deckRevealOneByOne) {
+      if ((ps.deckReveal?.length ?? 0) === 0 && ps.deck.length > 0) {
+        const [next] = ps.deck.splice(0, 1);
+        ps.deckReveal = [{ ...next, faceDown: false }];
+      } else if ((ps.deckReveal?.length ?? 0) === 0 && ps.deck.length === 0) {
+        ps.deckRevealOneByOne = false;
+        ps.deckReveal = undefined;
+      }
+    } else if ((ps.deckReveal?.length ?? 0) === 0) {
+      ps.deckReveal = undefined;
+    }
+
+    await updateGameState(newState);
+
+    const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
+    const destLabel: Record<DeckRevealDestination, string> = {
+      battle: 'バトルゾーン',
+      mana: 'マナ',
+      graveyard: '墓地',
+      shields: 'シールド',
+      deckTop: '山札の上',
+      deckBottom: '山札の下'
+    };
+    await addLogEntry({
+      timestamp: new Date().toISOString(),
+      player: playerIdForLog,
+      action: `山札確認から${toMove.length}枚を${destLabel[destination]}へ移動`
+    });
+  };
+
+  const closeDeckOperation = async () => {
+    const base = gameStateRef.current;
+    if (!base || isSpectator || playerNumber == null) return;
+    const newState = { ...base };
+    const ps = playerNumber === 1 ? newState.player1 : newState.player2;
+    const dr = ps.deckReveal;
+    if (dr?.length) {
+      for (const c of dr) {
+        ps.deck.push(stripFaceDown(c));
+      }
+      ps.deckReveal = undefined;
+    }
+    ps.deckRevealOneByOne = false;
+    await updateGameState(newState);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--sp-bg)]">
@@ -543,6 +691,11 @@ export function GamePageNew() {
         onAddToManaFromDeck={addToManaFromDeck}
         onBreakShield={breakShield}
         onMoveCardToZone={moveCard}
+        onShuffleDeck={shuffleDeck}
+        onRevealDeckMulti={revealDeckMulti}
+        onStartDeckRevealOneByOne={startDeckRevealOneByOne}
+        onMoveCardsFromDeckReveal={moveCardsFromDeckReveal}
+        onCloseDeckOperation={closeDeckOperation}
       />
     </>
   );
