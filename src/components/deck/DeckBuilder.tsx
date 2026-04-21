@@ -213,13 +213,17 @@ export default function DeckBuilder() {
           </div>
         )}
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:[grid-template-rows:minmax(0,1fr)]">
-          <section className="flex min-h-[min(44vh,22rem)] min-h-0 flex-col overflow-hidden rounded-lg border border-green-200 bg-white lg:min-h-0">
+        {/*
+          モバイル: 縦 flex で「デッキ → カード追加」に残り高さを必ず割り当てる（grid + min-h だけだと検索側が高さ0になり非表示になる）。
+          デスクトップ: 従来どおり 2 カラムグリッド。
+        */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:[grid-template-rows:minmax(0,1fr)]">
+          <section className="flex max-h-[min(40vh,320px)] min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-green-200 bg-white lg:max-h-none lg:min-h-0 lg:shrink">
             <div className="shrink-0 border-b border-green-100 bg-green-50/80 px-2 py-1.5 text-xs font-medium text-green-900 sm:px-3 sm:text-sm">
               デッキリスト（{stats.totalCards}枚）
             </div>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-1 sm:p-2">
-              <div className="h-full w-full min-h-0 overflow-y-auto">
+              <div className="h-full min-h-0 w-full overflow-y-auto overscroll-contain">
                 <DeckCardList
                   deckCards={deckCards}
                   onRemoveCard={removeCardFromDeck}
@@ -230,7 +234,7 @@ export default function DeckBuilder() {
             </div>
           </section>
 
-          <section className="flex min-h-[min(52vh,26rem)] min-h-0 flex-col overflow-hidden lg:min-h-0">
+          <section className="flex min-h-[12rem] flex-1 flex-col overflow-hidden lg:min-h-0">
             <CardSearchForDeck onAddCard={addCardToDeck} className="flex h-full min-h-0 flex-1 flex-col overflow-hidden" />
           </section>
         </div>
