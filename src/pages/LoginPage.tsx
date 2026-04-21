@@ -1,8 +1,38 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { login, register, signInWithGoogle } from '../lib/auth';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+
+/** OAuth コールバック失敗時、URL の ?error / #error を読んで表示し、クエリを消す */
+function readOAuthCallbackError(search: string, hash: string): string | null {
+  const q = new URLSearchParams(search);
+  let err = q.get('error');
+  let desc = q.get('error_description');
+  if (!err && !desc && hash) {
+    const h = hash.startsWith('#') ? hash.slice(1) : hash;
+    const hq = new URLSearchParams(h);
+    err = hq.get('error');
+    desc = hq.get('error_description');
+  }
+  if (!err && !desc) return null;
+  const raw = (desc || err || '').replace(/\+/g, ' ');
+  let message: string;
+  try {
+    message = decodeURIComponent(raw);
+  } catch {
+    message = raw;
+  }
+  if (message.includes('Unable to exchange external code')) {
+    return (
+      'Google ログインのトークン交換に失敗しました。' +
+      'Supabase の「Sign In / Providers → Google」の Client ID / Client Secret が Google Cloud の OAuth クライアントと一致しているか確認してください。' +
+      '同じブラウザで「Googleで続ける」からやり直すか、シークレットウィンドウで試してください。' +
+      'それでもダメなら、下の ID / パスワードでログインできます。'
+    );
+  }
+  return message || 'ログインに失敗しました';
+}
 
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -12,7 +42,16 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading, refreshUser } = useAuth();
+
+  useEffect(() => {
+    const oauthMsg = readOAuthCallbackError(location.search, location.hash);
+    if (oauthMsg) {
+      setError(oauthMsg);
+      navigate('/login', { replace: true });
+    }
+  }, [location.search, location.hash, navigate]);
 
   useEffect(() => {
     if (!authLoading && user) {
