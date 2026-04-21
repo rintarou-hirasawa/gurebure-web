@@ -11,6 +11,7 @@ import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { POST_LOGIN_REDIRECT_KEY } from './lib/auth';
+import { OAuthCodeRootRedirect } from './components/OAuthCodeRootRedirect';
 
 /** デッキ作成・オンライン対戦など、ログイン後に戻るパス（OAuth 後も保持するため sessionStorage） */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -119,7 +120,14 @@ function AppShellWithHeader() {
         className={`flex min-h-0 flex-1 flex-col ${deckRoute ? 'overflow-hidden' : 'overflow-y-auto'}`}
       >
         <Routes>
-        <Route path="/" element={<CardSearchPage />} />
+        <Route
+          path="/"
+          element={
+            <OAuthCodeRootRedirect>
+              <CardSearchPage />
+            </OAuthCodeRootRedirect>
+          }
+        />
         <Route
           path="/deck"
           element={

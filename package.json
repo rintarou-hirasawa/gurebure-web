@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "db:sql": "node scripts/run-sql.mjs",
-    "db:migrate": "node scripts/apply-migrations.mjs"
+    "db:migrate": "node scripts/apply-migrations.mjs",
+    "card-images:status": "node scripts/card-images-status.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
