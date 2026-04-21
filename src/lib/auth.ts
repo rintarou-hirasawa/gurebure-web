@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 /** 未ログインで保護ページへ来たときの戻り先（Google OAuth の往復でも sessionStorage は残る） */
 export const POST_LOGIN_REDIRECT_KEY = 'postLoginRedirect';
 
-/** ログイン成功後の遷移先。保存がなければ /matchmaking。オープンリダイレクト防止のため先頭 `/` のみ許可 */
+/** ログイン成功後の遷移先。保存がなければ /battle。オープンリダイレクト防止のため先頭 `/` のみ許可 */
 export function takePostLoginRedirectPath(): string {
   try {
     const v = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
@@ -13,7 +13,7 @@ export function takePostLoginRedirectPath(): string {
   } catch {
     /* ignore */
   }
-  return '/matchmaking';
+  return '/battle';
 }
 
 export interface User {

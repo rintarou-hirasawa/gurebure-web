@@ -26,6 +26,14 @@ interface GameBoardNewProps {
   onStartDeckRevealOneByOne: () => void;
   onMoveCardsFromDeckReveal: (cardIds: string[], destination: DeckRevealDestination) => void;
   onCloseDeckOperation: () => void | Promise<void>;
+  /** 一人回し: ターン表示・終了メッセージ・相手公開モード */
+  soloMode?: boolean;
+  /** 一人回し: 相手の手札を表向きで表示 */
+  opponentHandFaceUp?: boolean;
+  /** 一人回し: 相手ゾーンをオンラインと同様に操作・閲覧できる幅でモーダルを開く */
+  soloFullInfo?: boolean;
+  /** ゲームオーバー後ボタン文言 */
+  gameOverExitLabel?: string;
 }
 
 export function GameBoardNew({
@@ -46,7 +54,11 @@ export function GameBoardNew({
   onRevealDeckMulti,
   onStartDeckRevealOneByOne,
   onMoveCardsFromDeckReveal,
-  onCloseDeckOperation
+  onCloseDeckOperation,
+  soloMode = false,
+  opponentHandFaceUp = false,
+  soloFullInfo = false,
+  gameOverExitLabel = 'マッチメイキングへ戻る'
 }: GameBoardNewProps) {
   const [selectedZone, setSelectedZone] = useState<{
     zone: Zone;
@@ -313,7 +325,7 @@ export function GameBoardNew({
 
   /** バトルゾーンのカード表示（デッキ制作のサムネと同じ 63:88） */
   const battleCardWrapClass =
-    'relative mx-auto w-[76px] aspect-[63/88] sm:w-[88px] md:w-[96px]';
+    'relative mx-auto aspect-[63/88] w-[72px] max-[420px]:w-[min(22vw,70px)] sm:w-[88px] md:w-[96px]';
   const battleCardImgClass = 'h-full w-full rounded border object-cover';
 
   const ZoneBox = ({
@@ -581,7 +593,7 @@ export function GameBoardNew({
               }
             : undefined
         }
-        className={`relative z-10 flex h-[120px] w-[120px] shrink-0 flex-col items-center justify-center rounded-full border-[3px] border-gray-300 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)] md:h-[140px] md:w-[140px] ${
+        className={`relative z-10 flex h-[clamp(88px,28vw,120px)] w-[clamp(88px,28vw,120px)] shrink-0 flex-col items-center justify-center rounded-full border-[3px] border-gray-300 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)] md:h-[140px] md:w-[140px] ${
           glow ? 'ring-2 ring-[#0071e3]/35 ring-offset-2 ring-offset-[#f5f5f7]' : ''
         } ${droppable ? 'cursor-copy' : ''} ${openable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onDragOver={droppable ? onManaDragOver : undefined}
@@ -591,7 +603,7 @@ export function GameBoardNew({
         <span className="pointer-events-none text-[0.55rem] font-semibold uppercase tracking-wider text-gray-500">
           Mana Zone
         </span>
-        <span className="pointer-events-none mt-0.5 text-2xl font-semibold tabular-nums text-gray-900 md:text-3xl">
+        <span className="pointer-events-none mt-0.5 text-xl font-semibold tabular-nums text-gray-900 max-[380px]:text-lg md:text-3xl">
           {untapped}/{total || 0}
         </span>
       </div>
@@ -599,8 +611,10 @@ export function GameBoardNew({
   };
 
   return (
-    <div className="game-board flex min-h-[100dvh] flex-col bg-[#f5f5f7] lg:h-screen lg:flex-row">
-      <div className={`flex w-full flex-col border-b border-gray-200 bg-[#f5f5f7] lg:w-80 lg:border-b-0 lg:border-r lg:border-gray-200 ${showMobileLog ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'}`}>
+    <div className="game-board flex min-h-[100svh] flex-col bg-[#f5f5f7] lg:h-screen lg:min-h-0 lg:flex-row">
+      <div
+        className={`flex w-full flex-col border-b border-gray-200 bg-[#f5f5f7] pt-[env(safe-area-inset-top)] lg:w-80 lg:border-b-0 lg:border-r lg:border-gray-200 lg:pt-0 ${showMobileLog ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'}`}
+      >
         <div className="border-b border-gray-200 bg-white p-2">
           <div className="flex items-center justify-between mb-2">
             <button
@@ -641,11 +655,15 @@ export function GameBoardNew({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto bg-[#f5f5f7] p-2 ps-[max(0.5rem,env(safe-area-inset-left))] pe-[max(0.5rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#f5f5f7] p-2 pt-[max(0.5rem,env(safe-area-inset-top))] ps-[max(0.5rem,env(safe-area-inset-left))] pe-[max(0.5rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:p-4 lg:pt-4">
         <div className="mx-auto max-w-7xl">
           <div className="mb-2 text-center lg:mb-4">
             <div className="mb-1 text-sm font-semibold text-gray-900 lg:text-xl">
-              {isSpectator ? '観戦モード' : `${isMyTurn ? 'あなたのターン' : '相手のターン'}`}
+              {isSpectator
+                ? '観戦モード'
+                : soloMode
+                  ? `プレイヤー${gameState.activePlayer}のターン`
+                  : `${isMyTurn ? 'あなたのターン' : '相手のターン'}`}
             </div>
             <div className="text-xs text-gray-500 lg:text-sm">ターン {gameState.currentTurn}</div>
             <div className="mt-2 flex justify-center gap-2">
@@ -683,15 +701,29 @@ export function GameBoardNew({
                     <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-500">
                       Hand
                     </span>
-                    <div className="flex -space-x-3">
-                      {Array.from({
-                        length: Math.min(5, Math.max(1, opponentState.hand.length)),
-                      }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="h-12 w-9 rounded border border-gray-300 bg-white shadow-sm"
-                        />
-                      ))}
+                    <div className={`flex ${opponentHandFaceUp ? 'max-w-[min(100%,22rem)] flex-wrap gap-1' : '-space-x-3'}`}>
+                      {opponentHandFaceUp ? (
+                        opponentState.hand.map(card => (
+                          <div
+                            key={card.instanceId}
+                            className="relative h-16 w-[46px] shrink-0 sm:h-[4.5rem] sm:w-[52px]"
+                          >
+                            <CardImage
+                              card={card}
+                              className="pointer-events-none h-full w-full rounded border border-gray-200 object-cover shadow-sm"
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        Array.from({
+                          length: Math.min(5, Math.max(1, opponentState.hand.length)),
+                        }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-12 w-9 rounded border border-gray-300 bg-white shadow-sm"
+                          />
+                        ))
+                      )}
                     </div>
                     <span className="text-xs text-gray-600">{opponentState.hand.length} 枚</span>
                   </button>
@@ -969,7 +1001,8 @@ export function GameBoardNew({
                     <div className="mb-1 text-center text-[0.65rem] font-semibold uppercase tracking-wide text-gray-500">
                       Hand
                     </div>
-                    <div className="mx-auto flex min-h-[100px] w-full max-w-full items-end justify-center px-0 pb-1 lg:min-h-[130px]">
+                    <div className="mx-auto w-full max-w-full overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+                      <div className="mx-auto flex min-h-[92px] w-max min-w-full max-w-none items-end justify-center px-1 pb-1 lg:min-h-[130px]">
                       {myState.hand.length === 0 ? (
                         <span className="text-sm text-gray-500">手札なし</span>
                       ) : (
@@ -998,11 +1031,11 @@ export function GameBoardNew({
                               style={{
                                 transform: `rotate(${rot}deg) translateY(${yLift}px)`,
                                 zIndex: i,
-                                marginLeft: i === 0 ? 0 : -20,
+                                marginLeft: i === 0 ? 0 : -14,
                               }}
-                              className={`relative w-[72px] shrink-0 cursor-pointer sm:w-[84px] md:w-[96px] ${
+                              className={`relative w-[68px] shrink-0 cursor-pointer sm:w-[80px] md:w-[88px] lg:w-[96px] ${
                                 canInteractHand ? 'hover:-translate-y-1' : 'opacity-80'
-                              } transition-transform`}
+                              } transition-transform max-[380px]:w-[62px]`}
                             >
                               <button
                                 type="button"
@@ -1028,6 +1061,7 @@ export function GameBoardNew({
                           );
                         })
                       )}
+                    </div>
                     </div>
                     <button
                       type="button"
@@ -1058,7 +1092,7 @@ export function GameBoardNew({
                     </button>
                   </div>
                   {!isSpectator && (
-                    <div className="flex min-w-0 max-w-[58%] flex-col items-stretch gap-1.5 self-end sm:max-w-[50%]">
+                    <div className="flex min-w-0 max-w-[min(280px,calc(100%-7rem))] flex-col items-stretch gap-1.5 self-end sm:max-w-[50%]">
                       <button
                         type="button"
                         onClick={onEndTurn}
@@ -1211,11 +1245,13 @@ export function GameBoardNew({
           }
           actions={getZoneActions(selectedZone.zone, selectedZone.player)}
           canViewCards={
-            isSpectator
-              ? !['deck', 'hand', 'shields'].includes(selectedZone.zone)
-              : selectedZone.player === playerNumber
-                ? ['hand', 'mana', 'battle', 'graveyard'].includes(selectedZone.zone)
-                : !['deck', 'hand', 'shields'].includes(selectedZone.zone)
+            soloFullInfo && selectedZone.player !== playerNumber
+              ? ['hand', 'mana', 'battle', 'graveyard', 'shields'].includes(selectedZone.zone)
+              : isSpectator
+                ? !['deck', 'hand', 'shields'].includes(selectedZone.zone)
+                : selectedZone.player === playerNumber
+                  ? ['hand', 'mana', 'battle', 'graveyard'].includes(selectedZone.zone)
+                  : !['deck', 'hand', 'shields'].includes(selectedZone.zone)
           }
           zone={selectedZone.zone}
         />
@@ -1227,19 +1263,28 @@ export function GameBoardNew({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[2px]">
           <div className="sp-modal-surface max-w-md rounded-lg p-8 text-center">
             <h2 className="sp-display mb-4 text-3xl font-semibold text-[var(--sp-ink)]">
-              {gameState.winner === playerNumber ? '勝利！' : '敗北'}
+              {soloMode
+                ? `プレイヤー${gameState.winner ?? '?'}の勝利！`
+                : gameState.winner === playerNumber
+                  ? '勝利！'
+                  : '敗北'}
             </h2>
-            <p className="mb-6 text-xl text-[var(--sp-parchment)]">
-              {gameState.winner === playerNumber
-                ? 'おめでとうございます！'
-                : '次回頑張りましょう！'}
-            </p>
+            {!soloMode && (
+              <p className="mb-6 text-xl text-[var(--sp-parchment)]">
+                {gameState.winner === playerNumber
+                  ? 'おめでとうございます！'
+                  : '次回頑張りましょう！'}
+              </p>
+            )}
+            {soloMode && (
+              <p className="mb-6 text-lg text-[var(--sp-parchment)]">おつかれさまでした</p>
+            )}
             <button
               type="button"
               onClick={onQuitGame}
               className="sp-btn sp-btn--primary rounded-lg px-6 py-3 text-lg font-bold"
             >
-              マッチメイキングへ戻る
+              {gameOverExitLabel}
             </button>
           </div>
         </div>

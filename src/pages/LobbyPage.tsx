@@ -20,7 +20,7 @@ export default function LobbyPage() {
 
   useEffect(() => {
     if (!roomId || !playerId) {
-      navigate('/matchmaking');
+      navigate('/battle/online');
       return;
     }
 
@@ -242,7 +242,7 @@ export default function LobbyPage() {
           .eq('id', roomId);
       }
 
-      window.location.href = '/matchmaking';
+      window.location.href = '/battle/online';
     } catch (err: any) {
       setError(err.message || '部屋の退出に失敗しました');
     }

@@ -75,7 +75,7 @@ export default function CreateRoomPage() {
       <div className="container mx-auto px-4 py-8">
         <button
           type="button"
-          onClick={() => navigate('/matchmaking')}
+          onClick={() => navigate('/battle/online')}
           className="mb-6 flex items-center gap-2 text-[var(--sp-parchment)] transition-colors hover:text-[var(--sp-brass)]"
         >
           <ArrowLeft size={20} />

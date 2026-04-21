@@ -2,162 +2,111 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { GameBoardNew } from '../components/game/GameBoardNew';
-import { GameMatch, GameLogEntry } from '../types/room';
+import { GameLogEntry } from '../types/room';
 import { GameState, CardInGame, Zone, DeckRevealDestination } from '../types/game';
 import { Loader2 } from 'lucide-react';
 import { buildInitialGameState, cardInGameFromDeckCardRows } from '../lib/initialGameState';
 import { resolveBattlePlayDestination } from '../lib/cardZoneRules';
 
-export function GamePageNew() {
-  const [searchParams] = useSearchParams();
-  const matchId = searchParams.get('match');
-  const navigate = useNavigate();
+const SOLO_P1 = 'solo-player-1';
+const SOLO_P2 = 'solo-player-2';
 
-  const [match, setMatch] = useState<GameMatch | null>(null);
+/**
+ * 一人回し: ローカル状態のみ。ターン終了で activePlayer が切り替わり、盤面の「手前」が常に操作中プレイヤー。
+ */
+export function SoloGamePage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const deck1Id = searchParams.get('deck1');
+  const deck2Id = searchParams.get('deck2');
+
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([]);
-  const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
-  const [isSpectator, setIsSpectator] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  /** ポーリングが Supabase 反映前の古い game_state で上書きするのを防ぐ */
   const gameStateRef = useRef<GameState | null>(null);
-  const skipRemoteGameStateRef = useRef(false);
-  const mutationDepthRef = useRef(0);
-  const clearSkipPollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const playerId = localStorage.getItem('playerId');
 
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
 
   useEffect(() => {
-    return () => {
-      if (clearSkipPollTimerRef.current) {
-        clearTimeout(clearSkipPollTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!matchId || !playerId) {
-      navigate('/battle');
+    if (!deck1Id || !deck2Id) {
+      setError('デッキが指定されていません');
+      setLoading(false);
       return;
     }
 
-    loadMatch();
+    void (async () => {
+      try {
+        const [{ data: d1, error: e1 }, { data: d2, error: e2 }] = await Promise.all([
+          supabase.from('deck_cards').select('*, cards(*)').eq('deck_id', deck1Id),
+          supabase.from('deck_cards').select('*, cards(*)').eq('deck_id', deck2Id)
+        ]);
 
-    const channel = supabase
-      .channel(`match:${matchId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'game_matches', filter: `id=eq.${matchId}` },
-        (payload) => {
-          console.log('Match updated:', payload);
-          loadMatch();
+        if (e1) throw e1;
+        if (e2) throw e2;
+
+        const pile1 = cardInGameFromDeckCardRows((d1 || []) as any);
+        const pile2 = cardInGameFromDeckCardRows((d2 || []) as any);
+        if (pile1.length < 10 || pile2.length < 10) {
+          setError('デッキの枚数が足りません（10枚以上必要です）');
+          setLoading(false);
+          return;
         }
-      )
-      .subscribe();
 
-    const interval = setInterval(() => {
-      loadMatch();
-    }, 1000);
-
-    return () => {
-      supabase.removeChannel(channel);
-      clearInterval(interval);
-    };
-  }, [matchId]);
-
-  const loadMatch = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('game_matches')
-        .select('*')
-        .eq('id', matchId)
-        .single();
-
-      if (error) throw error;
-      if (!data) {
-        navigate('/battle');
-        return;
+        const initial = buildInitialGameState(
+          { playerId: SOLO_P1, deckId: deck1Id, deckPile: pile1 },
+          { playerId: SOLO_P2, deckId: deck2Id, deckPile: pile2 },
+          1
+        );
+        setGameState(initial);
+        gameStateRef.current = initial;
+        setGameLog([
+          {
+            timestamp: new Date().toISOString(),
+            player: 'システム',
+            action: '一人回しを開始',
+            details: 'プレイヤー1のターン'
+          }
+        ]);
+      } catch (err) {
+        console.error(err);
+        setError('デッキの読み込みに失敗しました');
+      } finally {
+        setLoading(false);
       }
+    })();
+  }, [deck1Id, deck2Id]);
 
-      setMatch(data);
-      setGameLog(data.game_log || []);
-
-      const soloSameBrowser =
-        data.player1_id === data.player2_id && data.player1_id === playerId;
-
-      if (soloSameBrowser) {
-        setPlayerNumber((data.active_player ?? 1) as 1 | 2);
-        setIsSpectator(false);
-      } else if (data.player1_id === playerId) {
-        setPlayerNumber(1);
-        setIsSpectator(false);
-      } else if (data.player2_id === playerId) {
-        setPlayerNumber(2);
-        setIsSpectator(false);
-      } else {
-        setIsSpectator(true);
-      }
-
-      if (data.game_state && Object.keys(data.game_state).length > 0) {
-        if (!skipRemoteGameStateRef.current) {
-          const gs = data.game_state as GameState;
-          setGameState(gs);
-          gameStateRef.current = gs;
-        }
-      } else {
-        await initializeGame(data);
-      }
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const addLogEntry = (entry: GameLogEntry) => {
+    setGameLog(log => [...log, entry]);
   };
 
-  const initializeGame = async (matchData: GameMatch) => {
-    try {
-      const { data: deck1Cards } = await supabase
-        .from('deck_cards')
-        .select('*, cards(*)')
-        .eq('deck_id', matchData.player1_deck_id);
+  const updateGameState = async (newState: Partial<GameState>) => {
+    const base = gameStateRef.current;
+    if (!base) return;
+    const updated = { ...base, ...newState } as GameState;
+    setGameState(updated);
+    gameStateRef.current = updated;
+  };
 
-      const { data: deck2Cards } = await supabase
-        .from('deck_cards')
-        .select('*, cards(*)')
-        .eq('deck_id', matchData.player2_deck_id);
+  const getZoneName = (zone: Zone): string => {
+    const names: Record<Zone, string> = {
+      deck: '山札',
+      hand: '手札',
+      mana: 'マナ',
+      battle: 'BZ',
+      graveyard: '墓地',
+      shields: 'シールド'
+    };
+    return names[zone] || zone;
+  };
 
-      const player1Deck = cardInGameFromDeckCardRows((deck1Cards || []) as any[]);
-      const player2Deck = cardInGameFromDeckCardRows((deck2Cards || []) as any[]);
-
-      const start = (matchData.active_player ?? 1) as 1 | 2;
-      const initialState = buildInitialGameState(
-        {
-          playerId: matchData.player1_id,
-          deckId: matchData.player1_deck_id,
-          deckPile: player1Deck
-        },
-        {
-          playerId: matchData.player2_id,
-          deckId: matchData.player2_deck_id,
-          deckPile: player2Deck
-        },
-        start
-      );
-
-      await supabase
-        .from('game_matches')
-        .update({ game_state: initialState })
-        .eq('id', matchId);
-
-      setGameState(initialState);
-      gameStateRef.current = initialState;
-    } catch (err) {
-      console.error('Failed to initialize game:', err);
-    }
+  const stripFaceDown = (c: CardInGame): CardInGame => {
+    const { faceDown: _fd, ...rest } = c;
+    return rest as CardInGame;
   };
 
   const moveCard = async (
@@ -168,7 +117,7 @@ export function GamePageNew() {
     toPlayer: 1 | 2
   ) => {
     const base = gameStateRef.current;
-    if (!base || isSpectator) return;
+    if (!base) return;
 
     const effectiveToZone = resolveBattlePlayDestination(card, toZone);
     const castSpellInsteadOfBZ = toZone === 'battle' && effectiveToZone === 'graveyard';
@@ -200,19 +149,18 @@ export function GamePageNew() {
     }
 
     const playerIdForLog = fromPlayer === 1 ? newState.player1.playerId : newState.player2.playerId;
-    const logEntry: GameLogEntry = {
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
-      action: actionText,
-    };
-
-    await addLogEntry(logEntry);
+      action: actionText
+    });
   };
 
   const breakShield = async (targetPlayer: 1 | 2, selectedCard?: CardInGame) => {
     const base = gameStateRef.current;
-    if (!base || !match || isSpectator) return;
+    if (!base) return;
 
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const targetState = targetPlayer === 1 ? newState.player1 : newState.player2;
 
@@ -220,19 +168,11 @@ export function GamePageNew() {
       newState.gameOver = true;
       newState.winner = playerNumber;
       await updateGameState(newState);
-
-      const logEntry: GameLogEntry = {
+      addLogEntry({
         timestamp: new Date().toISOString(),
         player: 'システム',
         action: `プレイヤー${playerNumber}の勝利！シールドブレイク！`
-      };
-      await addLogEntry(logEntry);
-
-      await supabase
-        .from('game_matches')
-        .update({ status: 'finished', winner: playerNumber })
-        .eq('id', matchId);
-
+      });
       return;
     }
 
@@ -247,133 +187,52 @@ export function GamePageNew() {
     }
 
     targetState.hand.push(brokenShield);
-
     await updateGameState(newState);
 
-    const attackerPlayerId = playerNumber === targetPlayer
-      ? (playerNumber === 1 ? newState.player2.playerId : newState.player1.playerId)
-      : (playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId);
+    const attackerPlayerId =
+      playerNumber === targetPlayer
+        ? playerNumber === 1
+          ? newState.player2.playerId
+          : newState.player1.playerId
+        : playerNumber === 1
+          ? newState.player1.playerId
+          : newState.player2.playerId;
     const defenderPlayerId = targetPlayer === 1 ? newState.player1.playerId : newState.player2.playerId;
 
-    const attackerAction = `シールドをブレイク（残り${targetState.shields.length}枚）`;
-    const defenderAction = `シールドがブレイクされ、手札に加えた`;
-
-    const attackerLog: GameLogEntry = {
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: attackerPlayerId,
-      action: attackerAction
-    };
-
-    const defenderLog: GameLogEntry = {
+      action: `シールドをブレイク（残り${targetState.shields.length}枚）`
+    });
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: defenderPlayerId,
-      action: defenderAction
-    };
-
-    await addLogEntry(attackerLog);
-    await addLogEntry(defenderLog);
-  };
-
-  const updateGameState = async (newState: Partial<GameState>) => {
-    if (!match || isSpectator) return;
-
-    const base = gameStateRef.current;
-    if (!base) return;
-
-    const updated = { ...base, ...newState } as GameState;
-    mutationDepthRef.current += 1;
-    skipRemoteGameStateRef.current = true;
-    setGameState(updated);
-    gameStateRef.current = updated;
-
-    try {
-      await supabase
-        .from('game_matches')
-        .update({
-          game_state: updated,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', matchId);
-    } finally {
-      mutationDepthRef.current = Math.max(0, mutationDepthRef.current - 1);
-      if (mutationDepthRef.current === 0) {
-        if (clearSkipPollTimerRef.current) {
-          clearTimeout(clearSkipPollTimerRef.current);
-        }
-        clearSkipPollTimerRef.current = setTimeout(() => {
-          skipRemoteGameStateRef.current = false;
-          clearSkipPollTimerRef.current = null;
-        }, 320);
-      }
-    }
+      action: 'シールドがブレイクされ、手札に加えた'
+    });
   };
 
   const endTurn = async () => {
-    if (!gameState || !match || isSpectator) return;
-    if (match.active_player !== playerNumber) return;
-
-    const newActivePlayer = match.active_player === 1 ? 2 : 1;
-    const newTurn = match.current_turn + 1;
-
-    await supabase
-      .from('game_matches')
-      .update({
-        active_player: newActivePlayer,
-        current_turn: newTurn,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', matchId);
-
-    const logEntry: GameLogEntry = {
+    const base = gameStateRef.current;
+    if (!base) return;
+    const current = base.activePlayer;
+    const newActive: 1 | 2 = current === 1 ? 2 : 1;
+    const newTurn = base.currentTurn + 1;
+    await updateGameState({
+      activePlayer: newActive,
+      currentTurn: newTurn
+    });
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: 'システム',
       action: `ターン${newTurn}開始`,
-      details: `プレイヤー${newActivePlayer}のターン`
-    };
-
-    await addLogEntry(logEntry);
-  };
-
-  const addLogEntry = async (entry: GameLogEntry) => {
-    const newLog = [...gameLog, entry];
-    setGameLog(newLog);
-
-    await supabase
-      .from('game_matches')
-      .update({ game_log: newLog })
-      .eq('id', matchId);
-  };
-
-  const handleQuitGame = async () => {
-    if (!match) return;
-
-    try {
-      await supabase
-        .from('game_matches')
-        .update({ status: 'finished' })
-        .eq('id', matchId);
-
-      await supabase
-        .from('rooms')
-        .update({ status: 'lobby' })
-        .eq('id', match.room_id);
-
-      await supabase
-        .from('room_participants')
-        .update({ role: 'participant' })
-        .eq('room_id', match.room_id);
-
-      window.location.href = `/lobby?room=${match.room_id}`;
-    } catch (err) {
-      console.error('Failed to quit game:', err);
-    }
+      details: `プレイヤー${newActive}のターン`
+    });
   };
 
   const drawCard = async () => {
     const base = gameStateRef.current;
-    if (!base || !match || isSpectator) return;
-    if (match.active_player !== playerNumber) return;
-
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const playerState = playerNumber === 1 ? newState.player1 : newState.player2;
 
@@ -381,42 +240,30 @@ export function GamePageNew() {
       newState.gameOver = true;
       newState.winner = playerNumber === 1 ? 2 : 1;
       await updateGameState(newState);
-
-      const logEntry: GameLogEntry = {
+      addLogEntry({
         timestamp: new Date().toISOString(),
         player: 'システム',
-        action: `プレイヤー${playerNumber === 1 ? 2 : 1}の勝利！デッキアウト！`
-      };
-      await addLogEntry(logEntry);
-
-      await supabase
-        .from('game_matches')
-        .update({ status: 'finished', winner: playerNumber === 1 ? 2 : 1 })
-        .eq('id', matchId);
-
+        action: `プレイヤー${newState.winner}の勝利！デッキアウト！`
+      });
       return;
     }
 
     const [card] = playerState.deck.splice(0, 1);
     playerState.hand.push(card);
-
     await updateGameState(newState);
 
     const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
-    const logEntry: GameLogEntry = {
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: 'カードを1枚ドロー'
-    };
-
-    await addLogEntry(logEntry);
+    });
   };
 
   const addToManaFromDeck = async () => {
     const base = gameStateRef.current;
-    if (!base || !match || isSpectator) return;
-    if (match.active_player !== playerNumber) return;
-
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const playerState = playerNumber === 1 ? newState.player1 : newState.player2;
 
@@ -424,39 +271,20 @@ export function GamePageNew() {
 
     const [card] = playerState.deck.splice(0, 1);
     playerState.mana.push(card);
-
     await updateGameState(newState);
 
     const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
-    const logEntry: GameLogEntry = {
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: '山札の上からマナゾーンにカードを追加'
-    };
-
-    await addLogEntry(logEntry);
-  };
-
-  const getZoneName = (zone: Zone): string => {
-    const names: Record<Zone, string> = {
-      deck: '山札',
-      hand: '手札',
-      mana: 'マナ',
-      battle: 'BZ',
-      graveyard: '墓地',
-      shields: 'シールド'
-    };
-    return names[zone] || zone;
-  };
-
-  const stripFaceDown = (c: CardInGame): CardInGame => {
-    const { faceDown: _fd, ...rest } = c;
-    return rest as CardInGame;
+    });
   };
 
   const shuffleDeck = async () => {
     const base = gameStateRef.current;
-    if (!base || isSpectator || playerNumber == null) return;
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const ps = playerNumber === 1 ? newState.player1 : newState.player2;
     if (ps.deck.length === 0) return;
@@ -468,7 +296,7 @@ export function GamePageNew() {
     ps.deck = d;
     await updateGameState(newState);
     const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
-    await addLogEntry({
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: '山札をシャッフル'
@@ -477,7 +305,8 @@ export function GamePageNew() {
 
   const revealDeckMulti = async (params: { count: number; fromTop: boolean; faceUp: boolean }) => {
     const base = gameStateRef.current;
-    if (!base || isSpectator || playerNumber == null) return;
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const ps = playerNumber === 1 ? newState.player1 : newState.player2;
     const n = Math.min(params.count, ps.deck.length);
@@ -492,7 +321,7 @@ export function GamePageNew() {
     ps.deckRevealOneByOne = false;
     await updateGameState(newState);
     const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
-    await addLogEntry({
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: `山札確認: ${n}枚を${params.fromTop ? '上' : '下'}から${params.faceUp ? '表向き' : '裏向き'}で確認`
@@ -501,7 +330,8 @@ export function GamePageNew() {
 
   const startDeckRevealOneByOne = async () => {
     const base = gameStateRef.current;
-    if (!base || isSpectator || playerNumber == null) return;
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const ps = playerNumber === 1 ? newState.player1 : newState.player2;
     if (ps.deck.length === 0) return;
@@ -510,7 +340,7 @@ export function GamePageNew() {
     ps.deckRevealOneByOne = true;
     await updateGameState(newState);
     const playerIdForLog = playerNumber === 1 ? newState.player1.playerId : newState.player2.playerId;
-    await addLogEntry({
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: '山札確認: 一枚ずつ確認を開始'
@@ -519,7 +349,8 @@ export function GamePageNew() {
 
   const moveCardsFromDeckReveal = async (cardIds: string[], destination: DeckRevealDestination) => {
     const base = gameStateRef.current;
-    if (!base || isSpectator || playerNumber == null) return;
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const ps = playerNumber === 1 ? newState.player1 : newState.player2;
     const reveal = ps.deckReveal ?? [];
@@ -574,7 +405,7 @@ export function GamePageNew() {
       deckTop: '山札の上',
       deckBottom: '山札の下'
     };
-    await addLogEntry({
+    addLogEntry({
       timestamp: new Date().toISOString(),
       player: playerIdForLog,
       action: `山札確認から${toMove.length}枚を${destLabel[destination]}へ移動`
@@ -583,7 +414,8 @@ export function GamePageNew() {
 
   const closeDeckOperation = async () => {
     const base = gameStateRef.current;
-    if (!base || isSpectator || playerNumber == null) return;
+    if (!base) return;
+    const playerNumber = base.activePlayer;
     const newState = { ...base };
     const ps = playerNumber === 1 ? newState.player1 : newState.player2;
     const dr = ps.deckReveal;
@@ -597,6 +429,10 @@ export function GamePageNew() {
     await updateGameState(newState);
   };
 
+  const handleQuitGame = () => {
+    navigate('/battle');
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--sp-bg)]">
@@ -608,47 +444,46 @@ export function GamePageNew() {
     );
   }
 
-  if (!match || !gameState) {
+  if (error || !gameState) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--sp-bg)]">
         <div className="text-center">
-          <p className="mb-4 text-xl text-[var(--sp-ink)]">ゲームが見つかりません</p>
-          <button
-            type="button"
-            onClick={() => navigate('/battle')}
-            className="sp-btn sp-btn--primary rounded-lg px-6 py-3 text-base font-bold"
-          >
-            マッチングに戻る
+          <p className="mb-4 text-xl text-[var(--sp-ink)]">{error ?? 'ゲームを初期化できません'}</p>
+          <button type="button" onClick={() => navigate('/battle/solo')} className="sp-btn sp-btn--primary rounded-lg px-6 py-3 text-base font-bold">
+            一人回し設定に戻る
           </button>
         </div>
       </div>
     );
   }
 
-  const isMyTurn = match.active_player === playerNumber;
+  const playerNumber = gameState.activePlayer;
+  const isMyTurn = true;
 
   return (
-    <>
-      <GameBoardNew
-        gameState={gameState}
-        playerNumber={playerNumber || 1}
-        isMyTurn={isMyTurn}
-        isSpectator={isSpectator}
-        gameLog={gameLog}
-        onMoveCard={moveCard}
-        onEndTurn={endTurn}
-        onQuitGame={handleQuitGame}
-        onUpdateGameState={updateGameState}
-        onDrawCard={drawCard}
-        onAddToManaFromDeck={addToManaFromDeck}
-        onBreakShield={breakShield}
-        onMoveCardToZone={moveCard}
-        onShuffleDeck={shuffleDeck}
-        onRevealDeckMulti={revealDeckMulti}
-        onStartDeckRevealOneByOne={startDeckRevealOneByOne}
-        onMoveCardsFromDeckReveal={moveCardsFromDeckReveal}
-        onCloseDeckOperation={closeDeckOperation}
-      />
-    </>
+    <GameBoardNew
+      gameState={gameState}
+      playerNumber={playerNumber}
+      isMyTurn={isMyTurn}
+      isSpectator={false}
+      gameLog={gameLog}
+      soloMode
+      opponentHandFaceUp
+      soloFullInfo
+      gameOverExitLabel="対戦メニューに戻る"
+      onMoveCard={moveCard}
+      onEndTurn={endTurn}
+      onQuitGame={handleQuitGame}
+      onUpdateGameState={updateGameState}
+      onDrawCard={drawCard}
+      onAddToManaFromDeck={addToManaFromDeck}
+      onBreakShield={breakShield}
+      onMoveCardToZone={moveCard}
+      onShuffleDeck={shuffleDeck}
+      onRevealDeckMulti={revealDeckMulti}
+      onStartDeckRevealOneByOne={startDeckRevealOneByOne}
+      onMoveCardsFromDeckReveal={moveCardsFromDeckReveal}
+      onCloseDeckOperation={closeDeckOperation}
+    />
   );
 }

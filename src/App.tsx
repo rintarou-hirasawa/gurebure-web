@@ -5,6 +5,10 @@ import { APP_TITLE_EN, APP_TITLE_JA } from './lib/branding';
 import CardSearchPage from './pages/CardSearchPage';
 import DeckBuilder from './components/deck/DeckBuilder';
 import { MatchmakingPage } from './pages/MatchmakingPage';
+import { BattleHubPage } from './pages/BattleHubPage';
+import { OnlineBattleMenuPage } from './pages/OnlineBattleMenuPage';
+import { SoloSetupPage } from './pages/SoloSetupPage';
+import { SoloGamePage } from './pages/SoloGamePage';
 import { GamePageNew } from './pages/GamePageNew';
 import CreateRoomPage from './pages/CreateRoomPage';
 import JoinRoomPage from './pages/JoinRoomPage';
@@ -40,6 +44,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const battleNavActive =
+    location.pathname.startsWith('/battle') || location.pathname.startsWith('/game');
   const { user, logoutUser } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -123,9 +129,15 @@ function Header() {
                 <Plus className="h-4 w-4 shrink-0 text-green-700" />
                 デッキ作成
               </Link>
-              <Link to="/matchmaking" className={navLinkClass('/matchmaking')} onClick={() => setMenuOpen(false)}>
+              <Link
+                to="/battle"
+                className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                  battleNavActive ? 'bg-green-200/80 text-green-950' : 'text-[var(--sp-ink)] hover:bg-green-100'
+                }`}
+                onClick={() => setMenuOpen(false)}
+              >
                 <Gamepad2 className="h-4 w-4 shrink-0 text-slate-600" />
-                オンライン対戦
+                対戦表示
               </Link>
             </nav>
             <div className="border-t border-green-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -164,7 +176,8 @@ function Header() {
 /** 対戦中はスマホで青ヘッダーを隠し、PC幅では従来どおり表示 */
 function AppShellWithHeader() {
   const location = useLocation();
-  const hideBlueHeaderOnMobileGame = location.pathname === '/game';
+  const hideBlueHeaderOnMobileGame =
+    location.pathname === '/game' || location.pathname.startsWith('/game/');
 
   const deckRoute = location.pathname === '/deck';
 
@@ -202,6 +215,30 @@ function AppShellWithHeader() {
           }
         />
         <Route
+          path="/battle"
+          element={
+            <ProtectedRoute>
+              <BattleHubPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/battle/online"
+          element={
+            <ProtectedRoute>
+              <OnlineBattleMenuPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/battle/solo"
+          element={
+            <ProtectedRoute>
+              <SoloSetupPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/create-room"
           element={
             <ProtectedRoute>
@@ -230,6 +267,14 @@ function AppShellWithHeader() {
           element={
             <ProtectedRoute>
               <GamePageNew />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game/solo"
+          element={
+            <ProtectedRoute>
+              <SoloGamePage />
             </ProtectedRoute>
           }
         />
