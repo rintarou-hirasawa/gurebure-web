@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Deck, DeckCard, DeckStats } from '../types/deck';
+import { applyCardInfoOverrides } from '../lib/cardInfoOverrides';
 import { Card } from '../types/card';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -81,7 +82,11 @@ export function useDeck(deckId?: string | null) {
       if (cardsError) throw cardsError;
 
       setDeck(deckData);
-      setDeckCards(cardsData || []);
+      setDeckCards(
+        (cardsData || []).map((dc) =>
+          dc.card ? { ...dc, card: applyCardInfoOverrides(dc.card as Card) } : dc
+        )
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load deck');
     } finally {
@@ -202,7 +207,10 @@ export function useDeck(deckId?: string | null) {
           .single();
 
         if (error) throw error;
-        setDeckCards(prev => [...prev, data]);
+        const row = data.card
+          ? { ...data, card: applyCardInfoOverrides(data.card as Card) }
+          : data;
+        setDeckCards(prev => [...prev, row]);
       }
 
       await supabase

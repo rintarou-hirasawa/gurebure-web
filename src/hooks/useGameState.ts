@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { GameRoom, GameState, CardInGame, Zone } from '../types/game';
-import { Card } from '../types/card';
+import { applyCardInfoOverrides } from '../lib/cardInfoOverrides';
+import type { Card } from '../types/card';
 
 export function useGameState(gameRoomId: string, playerId: string) {
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
@@ -70,7 +71,7 @@ export function useGameState(gameRoomId: string, playerId: string) {
       const createDeck = (deckCards: any[]): CardInGame[] => {
         const cards: CardInGame[] = [];
         deckCards?.forEach((dc) => {
-          const card = dc.card;
+          const card = dc.card ? applyCardInfoOverrides(dc.card as Card) : null;
           if (!card) return;
           for (let i = 0; i < dc.quantity; i++) {
             cards.push({

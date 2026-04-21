@@ -8,7 +8,9 @@ import { Loader2 } from 'lucide-react';
 import { useScreenOrientationLock } from '../hooks/useScreenOrientationLock';
 import { useMatchPortraitNudge } from '../hooks/useMatchPortraitNudge';
 import { PortraitToLandscapeOverlay } from '../components/game/PortraitToLandscapeOverlay';
+import { applyCardInfoOverrides } from '../lib/cardInfoOverrides';
 import { resolveBattlePlayDestination } from '../lib/cardZoneRules';
+import type { Card } from '../types/card';
 
 export function GamePageNew() {
   const [searchParams] = useSearchParams();
@@ -141,7 +143,7 @@ export function GamePageNew() {
         const cards: CardInGame[] = [];
         deckCards?.forEach(dc => {
           for (let i = 0; i < dc.quantity; i++) {
-            const card = dc.cards;
+            const card = applyCardInfoOverrides(dc.cards as Card);
             cards.push({
               ...card,
               type: card.card_type,

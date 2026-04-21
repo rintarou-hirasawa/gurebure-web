@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { applyCardInfoOverrides } from '../lib/cardInfoOverrides';
 import { Card, SearchFilters, POWER_FILTER_MIN, POWER_FILTER_MAX } from '../types/card';
 
 function formatFetchError(err: unknown): string {
@@ -76,7 +77,7 @@ export function useCards(filters: SearchFilters) {
 
       if (fetchError) throw fetchError;
 
-      let list = (data || []) as Card[];
+      let list = ((data || []) as Card[]).map(applyCardInfoOverrides);
 
       if (filters.raceComplexity === 'multi') {
         list = list.filter(c => c.race && c.race.includes('/'));
