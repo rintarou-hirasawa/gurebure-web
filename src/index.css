@@ -243,4 +243,25 @@
     box-shadow: 0 25px 50px -12px rgba(20, 83, 45, 0.12);
     border-radius: 0.5rem;
   }
+
+  /**
+   * 対戦画面（GameBoardNew ルート .game-board）
+   * Apple 風: 明るい背景・#0071e3 プライマリ（ネオングリーンではなく落ち着いた青）
+   */
+  .game-board .sp-game-btn {
+    border-color: #0077ed;
+    background: #0071e3;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  .game-board .sp-game-btn:hover {
+    background: #0077ed;
+    border-color: #0063cc;
+  }
+
+  .game-board .sp-game-btn:disabled {
+    opacity: 0.4;
+  }
 }

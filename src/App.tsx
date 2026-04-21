@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Plus, Gamepad2, LogOut, LogIn } from 'lucide-react';
-import { APP_TITLE_EN, APP_TITLE_JA, APP_TITLE_SHORT } from './lib/branding';
+import { APP_TITLE_EN, APP_TITLE_JA } from './lib/branding';
 import CardSearchPage from './pages/CardSearchPage';
 import DeckBuilder from './components/deck/DeckBuilder';
 import { MatchmakingPage } from './pages/MatchmakingPage';
@@ -81,7 +81,7 @@ function Header() {
             {APP_TITLE_EN}
           </div>
           <div className="mt-0.5 truncate text-[10px] leading-tight text-[var(--sp-muted)] sm:text-xs">
-            {APP_TITLE_JA}（通称 {APP_TITLE_SHORT}）
+            {APP_TITLE_JA}
           </div>
         </Link>
         <button

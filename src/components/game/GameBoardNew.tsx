@@ -334,12 +334,12 @@ export function GameBoardNew({
     showCount?: boolean;
   }) => (
     <div
-      className={`cursor-pointer rounded border border-slate-500 bg-slate-700 p-1 transition-colors hover:border-green-400 lg:border-2 lg:p-2 ${className}`}
+      className={`cursor-pointer rounded-lg border border-gray-200 bg-white p-1 shadow-sm transition-colors hover:border-gray-300 lg:border-2 lg:p-2 ${className}`}
       onClick={onClick}
     >
-      <div className="text-white text-[0.6rem] lg:text-xs font-bold mb-1 truncate">{label}</div>
-      <div className="bg-slate-800 rounded h-8 lg:h-16 flex items-center justify-center">
-        <div className="text-white text-xs lg:text-sm font-bold">
+      <div className="mb-1 truncate text-[0.6rem] font-semibold text-gray-600 lg:text-xs">{label}</div>
+      <div className="flex h-8 items-center justify-center rounded-md bg-gray-50 lg:h-16">
+        <div className="text-xs font-semibold text-gray-900 lg:text-sm">
           {showCount ? `${cards.length}枚` : ''}
         </div>
       </div>
@@ -375,20 +375,20 @@ export function GameBoardNew({
     }
     if (raw.includes('フィールド')) {
       return {
-        icon: <Shield className={`${iconSm} text-emerald-800`} strokeWidth={2.5} />,
-        iconBg: 'bg-emerald-100',
+        icon: <Shield className={`${iconSm} text-[#1d1d1f]`} strokeWidth={2.5} />,
+        iconBg: 'bg-gray-200',
       };
     }
     if (raw.includes('装備')) {
       return {
-        icon: <Wrench className={`${iconSm} text-green-900`} strokeWidth={2.5} />,
-        iconBg: 'bg-green-100',
+        icon: <Wrench className={`${iconSm} text-[#1d1d1f]`} strokeWidth={2.5} />,
+        iconBg: 'bg-gray-100',
       };
     }
     if (raw.includes('マテリアル')) {
       return {
-        icon: <Gem className={`${iconSm} text-violet-800`} strokeWidth={2.5} />,
-        iconBg: 'bg-violet-100',
+        icon: <Gem className={`${iconSm} text-[#1d1d1f]`} strokeWidth={2.5} />,
+        iconBg: 'bg-blue-100',
       };
     }
     if (raw.includes('モンスター') || raw.includes('クリーチャー')) {
@@ -401,8 +401,8 @@ export function GameBoardNew({
     const primary = (card.type || card.card_type || '').trim();
     if (primary) {
       return {
-        icon: <Package className={`${iconSm} text-slate-700`} strokeWidth={2.5} />,
-        iconBg: 'bg-slate-200',
+        icon: <Package className={`${iconSm} text-[#424245]`} strokeWidth={2.5} />,
+        iconBg: 'bg-gray-200',
       };
     }
     return null;
@@ -581,17 +581,17 @@ export function GameBoardNew({
               }
             : undefined
         }
-        className={`relative z-10 flex h-[120px] w-[120px] shrink-0 flex-col items-center justify-center rounded-full border-4 border-green-400/90 bg-gradient-to-b from-green-600/40 to-emerald-950/90 shadow-[0_0_28px_rgba(34,197,94,0.45)] md:h-[140px] md:w-[140px] ${
-          glow ? 'ring-4 ring-green-300/90 ring-offset-2 ring-offset-slate-950' : ''
-        } ${droppable ? 'cursor-copy' : ''} ${openable ? 'cursor-pointer hover:brightness-110' : ''}`}
+        className={`relative z-10 flex h-[120px] w-[120px] shrink-0 flex-col items-center justify-center rounded-full border-[3px] border-gray-300 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)] md:h-[140px] md:w-[140px] ${
+          glow ? 'ring-2 ring-[#0071e3]/35 ring-offset-2 ring-offset-[#f5f5f7]' : ''
+        } ${droppable ? 'cursor-copy' : ''} ${openable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onDragOver={droppable ? onManaDragOver : undefined}
         onDragLeave={droppable ? () => setManaDropHover(false) : undefined}
         onDrop={droppable ? onManaDrop : undefined}
       >
-        <span className="pointer-events-none text-[0.55rem] font-bold uppercase tracking-wider text-green-100/95">
+        <span className="pointer-events-none text-[0.55rem] font-semibold uppercase tracking-wider text-gray-500">
           Mana Zone
         </span>
-        <span className="pointer-events-none mt-0.5 text-2xl font-black tabular-nums text-white md:text-3xl">
+        <span className="pointer-events-none mt-0.5 text-2xl font-semibold tabular-nums text-gray-900 md:text-3xl">
           {untapped}/{total || 0}
         </span>
       </div>
@@ -599,19 +599,19 @@ export function GameBoardNew({
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-black lg:h-screen lg:flex-row">
-      <div className={`w-full lg:w-80 bg-slate-900 border-b-2 lg:border-b-0 lg:border-r-2 border-slate-700 flex flex-col ${showMobileLog ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'}`}>
-        <div className="bg-slate-800 border-b-2 border-slate-700 p-2">
+    <div className="game-board flex min-h-[100dvh] flex-col bg-[#f5f5f7] lg:h-screen lg:flex-row">
+      <div className={`flex w-full flex-col border-b border-gray-200 bg-[#f5f5f7] lg:w-80 lg:border-b-0 lg:border-r lg:border-gray-200 ${showMobileLog ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'}`}>
+        <div className="border-b border-gray-200 bg-white p-2">
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={() => setShowCardViewer(!showCardViewer)}
-              className="text-white text-sm bg-slate-700 px-2 py-1 rounded hidden lg:block"
+              className="hidden rounded bg-gray-100 px-2 py-1 text-sm text-gray-800 lg:block"
             >
               カードビューワー {showCardViewer ? 'ON' : 'OFF'}
             </button>
             <button
               onClick={() => setShowMobileLog(false)}
-              className="text-white text-sm bg-red-600 px-3 py-1 rounded lg:hidden ml-auto"
+              className="ml-auto rounded bg-red-500 px-3 py-1 text-sm text-white lg:hidden"
             >
               閉じる
             </button>
@@ -619,21 +619,21 @@ export function GameBoardNew({
         </div>
 
         {showCardViewer && selectedCard && (
-          <div className="border-b-2 border-slate-700 p-3 bg-slate-800 hidden lg:block">
-            <div className="bg-slate-700 rounded p-2">
-              <div className="text-white font-bold text-sm mb-1">{selectedCard.name}</div>
-              <div className="text-slate-300 text-xs">{selectedCard.type}</div>
+          <div className="hidden border-b border-gray-200 bg-white p-3 lg:block">
+            <div className="rounded bg-gray-50 p-2">
+              <div className="mb-1 text-sm font-semibold text-gray-900">{selectedCard.name}</div>
+              <div className="text-xs text-gray-500">{selectedCard.type}</div>
             </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto bg-slate-900 p-2">
-          <div className="text-white text-xs lg:text-sm font-bold mb-2">ゲームログ</div>
+        <div className="flex-1 overflow-y-auto bg-[#f5f5f7] p-2">
+          <div className="mb-2 text-xs font-semibold text-gray-900 lg:text-sm">ゲームログ</div>
           <div className="space-y-1 text-xs">
             {gameLog.slice(-20).map((log, index) => (
-              <div key={index} className="text-slate-300 leading-relaxed">
-                <span className="text-[var(--sp-brass)]">{log.player}</span>：
-                <span className="text-yellow-300">{log.action}</span>
+              <div key={index} className="leading-relaxed text-gray-600">
+                <span className="font-medium text-[#0071e3]">{log.player}</span>：
+                <span className="text-gray-800">{log.action}</span>
                 {log.details && <span>（{log.details}）</span>}
               </div>
             ))}
@@ -641,13 +641,13 @@ export function GameBoardNew({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto bg-gradient-to-br from-slate-800 to-slate-900 p-2 ps-[max(0.5rem,env(safe-area-inset-left))] pe-[max(0.5rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:p-4">
+      <div className="min-h-0 flex-1 overflow-auto bg-[#f5f5f7] p-2 ps-[max(0.5rem,env(safe-area-inset-left))] pe-[max(0.5rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:p-4">
         <div className="mx-auto max-w-7xl">
           <div className="mb-2 text-center lg:mb-4">
-            <div className="text-sm font-bold text-white lg:text-xl mb-1">
+            <div className="mb-1 text-sm font-semibold text-gray-900 lg:text-xl">
               {isSpectator ? '観戦モード' : `${isMyTurn ? 'あなたのターン' : '相手のターン'}`}
             </div>
-            <div className="text-xs text-slate-300 lg:text-sm">ターン {gameState.currentTurn}</div>
+            <div className="text-xs text-gray-500 lg:text-sm">ターン {gameState.currentTurn}</div>
             <div className="mt-2 flex justify-center gap-2">
               <button
                 type="button"
@@ -660,7 +660,7 @@ export function GameBoardNew({
                 <button
                   type="button"
                   onClick={onQuitGame}
-                  className="touch-manipulation rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700 lg:mt-0 lg:px-4 lg:text-sm"
+                  className="touch-manipulation rounded-full bg-gray-200 px-3 py-1 text-xs text-gray-900 hover:bg-gray-300 lg:mt-0 lg:px-4 lg:text-sm"
                 >
                   対戦をやめる
                 </button>
@@ -670,17 +670,17 @@ export function GameBoardNew({
 
           <div className="space-y-2 lg:space-y-3">
             {/* 奥＝相手（上段・やや奥行きで見せる） */}
-            <div className="relative z-0 rounded-xl border border-slate-600/50 bg-slate-950/40 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div className="mb-1.5 text-xs text-slate-400 lg:text-sm">相手の場</div>
+            <div className="relative z-0 rounded-2xl border border-gray-200/90 bg-white p-2 shadow-sm">
+              <div className="mb-1.5 text-xs text-gray-500 lg:text-sm">相手の場</div>
 
               <div className="mb-1.5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex shrink-0 items-end gap-2">
                   <button
                     type="button"
                     onClick={() => setSelectedZone({ zone: 'hand', player: opponentNumber })}
-                    className="flex flex-col items-start gap-1 rounded-lg border border-slate-600/80 bg-slate-800/80 px-2 py-2 text-left transition hover:border-green-400/60"
+                    className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 bg-gray-50/90 px-2 py-2 text-left transition hover:border-gray-300"
                   >
-                    <span className="text-[0.65rem] font-bold uppercase tracking-wide text-slate-400">
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-500">
                       Hand
                     </span>
                     <div className="flex -space-x-3">
@@ -689,34 +689,34 @@ export function GameBoardNew({
                       }).map((_, i) => (
                         <div
                           key={i}
-                          className="h-12 w-9 rounded border-2 border-green-500/40 bg-slate-900 shadow-md"
+                          className="h-12 w-9 rounded border border-gray-300 bg-white shadow-sm"
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-slate-300">{opponentState.hand.length} 枚</span>
+                    <span className="text-xs text-gray-600">{opponentState.hand.length} 枚</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedZone({ zone: 'shields', player: opponentNumber })}
-                    className="flex h-[4.5rem] min-w-[3.25rem] flex-col items-center justify-center rounded-md border border-slate-600 bg-slate-800/90 px-1.5 py-1 text-center transition hover:border-green-400/50"
+                    className="flex h-[4.5rem] min-w-[3.25rem] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-1.5 py-1 text-center shadow-sm transition hover:border-gray-300"
                   >
-                    <Shield className="mb-0.5 h-3.5 w-3.5 text-[var(--sp-brass)]" />
-                    <span className="text-[0.5rem] font-bold leading-tight text-slate-400">盾</span>
-                    <span className="text-sm font-black text-white">{opponentState.shields.length}</span>
+                    <Shield className="mb-0.5 h-3.5 w-3.5 text-gray-500" />
+                    <span className="text-[0.5rem] font-semibold leading-tight text-gray-500">盾</span>
+                    <span className="text-sm font-semibold text-gray-900">{opponentState.shields.length}</span>
                   </button>
                 </div>
 
-                <div className="flex flex-1 flex-wrap items-center justify-center gap-3 text-xs text-slate-300 sm:gap-5">
+                <div className="flex flex-1 flex-wrap items-center justify-center gap-3 text-xs text-gray-600 sm:gap-5">
                   <button
                     type="button"
-                    className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-700/80"
+                    className="rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50"
                     onClick={() => setSelectedZone({ zone: 'deck', player: opponentNumber })}
                   >
                     山 {opponentState.deck.length}
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-700/80"
+                    className="rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50"
                     onClick={() => setSelectedZone({ zone: 'graveyard', player: opponentNumber })}
                   >
                     墓 {opponentState.graveyard.length}
@@ -731,7 +731,7 @@ export function GameBoardNew({
                   />
                   <button
                     type="button"
-                    className="text-[0.65rem] text-slate-400 underline decoration-slate-500"
+                    className="text-[0.65rem] text-[#0071e3] underline decoration-gray-300"
                     onClick={() => openManaModal(opponentNumber)}
                   >
                     マナ操作
@@ -739,15 +739,15 @@ export function GameBoardNew({
                 </div>
               </div>
 
-              <div className="mb-1 rounded-xl border border-slate-600 bg-slate-900/90 p-2 shadow-inner lg:p-3">
-                <div className="mb-1.5 text-center text-sm font-bold text-white lg:text-lg">バトルゾーン</div>
+              <div className="mb-1 rounded-2xl border border-gray-200 bg-gray-50/80 p-2 lg:p-3">
+                <div className="mb-1.5 text-center text-sm font-semibold text-gray-900 lg:text-lg">バトルゾーン</div>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {opponentState.battle.map((card) => (
                     <div key={card.instanceId} className={`relative shrink-0 ${card.tapped ? 'opacity-50' : ''}`}>
                       <button
                         type="button"
                         title="カード詳細"
-                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-500/80 bg-slate-900/95 text-green-300 shadow-md hover:bg-slate-800 hover:text-white"
+                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-[#0071e3] shadow-md hover:bg-gray-50"
                         onClick={(e) => {
                           e.stopPropagation();
                           setCardDetailModal(card);
@@ -770,7 +770,7 @@ export function GameBoardNew({
                         <div className={battleCardWrapClass}>
                           <CardImage
                             card={card}
-                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
+                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-gray-200 transition-all hover:border-gray-400`}
                           />
                           {renderBattleZoneCardMarks(card)}
                         </div>
@@ -782,26 +782,26 @@ export function GameBoardNew({
             </div>
 
             {/* 手前＝自分（下段・手元に近い見え方） */}
-            <div className="relative z-10 -mt-1 rounded-xl border border-green-500/35 bg-slate-900/85 p-2 shadow-[0_-12px_36px_rgba(0,0,0,0.45)] ring-1 ring-green-500/25 lg:p-3">
-              <div className="mb-1.5 text-xs text-slate-400 lg:text-sm">あなたの場</div>
+            <div className="relative z-10 -mt-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-[0_4px_24px_rgba(0,0,0,0.06)] lg:p-3">
+              <div className="mb-1.5 text-xs text-gray-500 lg:text-sm">あなたの場</div>
 
               <div
                 title="手札をドロップしてバトルゾーンに出せます"
-                className={`mb-2 min-h-[72px] rounded-xl border border-slate-600 bg-slate-900/90 p-2 shadow-inner transition-[box-shadow] lg:min-h-[88px] lg:p-3 ${
-                  battleDropHover && canInteractHand ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-900' : ''
+                className={`mb-2 min-h-[72px] rounded-2xl border border-gray-200 bg-gray-50/90 p-2 transition-[box-shadow] lg:min-h-[88px] lg:p-3 ${
+                  battleDropHover && canInteractHand ? 'ring-2 ring-[#0071e3]/30 ring-offset-2 ring-offset-white' : ''
                 }`}
                 onDragOver={canInteractHand ? onBattleDragOver : undefined}
                 onDragLeave={canInteractHand ? () => setBattleDropHover(false) : undefined}
                 onDrop={canInteractHand ? onBattleDrop : undefined}
               >
-                <div className="mb-1.5 text-center text-sm font-bold text-white lg:text-lg">バトルゾーン</div>
+                <div className="mb-1.5 text-center text-sm font-semibold text-gray-900 lg:text-lg">バトルゾーン</div>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {myState.battle.map((card) => (
                     <div key={card.instanceId} className={`relative shrink-0 ${card.tapped ? 'opacity-50' : ''}`}>
                       <button
                         type="button"
                         title="カード詳細"
-                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-500/80 bg-slate-900/95 text-green-300 shadow-md hover:bg-slate-800 hover:text-white"
+                        className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-[#0071e3] shadow-md hover:bg-gray-50"
                         onClick={(e) => {
                           e.stopPropagation();
                           setCardDetailModal(card);
@@ -824,7 +824,7 @@ export function GameBoardNew({
                         <div className={battleCardWrapClass}>
                           <CardImage
                             card={card}
-                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
+                            className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-gray-200 transition-all hover:border-gray-400`}
                           />
                           {renderBattleZoneCardMarks(card)}
                         </div>
@@ -838,17 +838,17 @@ export function GameBoardNew({
               <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5 lg:hidden">
                 <button
                   type="button"
-                  className="touch-manipulation rounded-md border border-slate-600 bg-slate-800/95 px-2 py-1 text-[0.65rem] text-slate-200 active:bg-slate-700"
+                  className="touch-manipulation rounded-full border border-gray-200 bg-white px-2 py-1 text-[0.65rem] text-gray-800 shadow-sm active:bg-gray-50"
                   onClick={() => setSelectedZone({ zone: 'deck', player: playerNumber })}
                 >
-                  <span className="text-slate-400">山</span>{' '}
-                  <span className="font-bold text-white">{myState.deck.length}</span>
+                  <span className="text-gray-500">山</span>{' '}
+                  <span className="font-semibold text-gray-900">{myState.deck.length}</span>
                 </button>
                 <div
                   title="手札をドロップしてシールドゾーンに置けます"
                   className={`rounded-md transition-[box-shadow] ${
                     shieldDropHover && canInteractHand
-                      ? 'ring-2 ring-green-400 ring-offset-1 ring-offset-slate-900'
+                      ? 'ring-2 ring-[#0071e3]/35 ring-offset-1 ring-offset-white'
                       : ''
                   }`}
                   onDragOver={canInteractHand ? onShieldDragOver : undefined}
@@ -857,18 +857,18 @@ export function GameBoardNew({
                 >
                   <button
                     type="button"
-                    className="touch-manipulation flex items-center gap-1 rounded-md border border-slate-600 bg-slate-800/95 px-2 py-1 text-[0.65rem] text-slate-200 active:bg-slate-800"
+                    className="touch-manipulation flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 text-[0.65rem] text-gray-800 shadow-sm active:bg-gray-50"
                     onClick={() => setSelectedZone({ zone: 'shields', player: playerNumber })}
                   >
-                    <Shield className="h-3 w-3 shrink-0 text-[var(--sp-brass)]" />
-                    <span className="font-bold text-white">{myState.shields.length}</span>
+                    <Shield className="h-3 w-3 shrink-0 text-gray-500" />
+                    <span className="font-semibold text-gray-900">{myState.shields.length}</span>
                   </button>
                 </div>
                 <div
                   title="手札をドロップして墓地に置けます"
                   className={`rounded-md transition-[box-shadow] ${
                     graveyardDropHover && canInteractHand
-                      ? 'ring-2 ring-violet-400 ring-offset-1 ring-offset-slate-900'
+                      ? 'ring-2 ring-gray-400/50 ring-offset-1 ring-offset-white'
                       : ''
                   }`}
                   onDragOver={canInteractHand ? onGraveyardDragOver : undefined}
@@ -877,11 +877,11 @@ export function GameBoardNew({
                 >
                   <button
                     type="button"
-                    className="touch-manipulation flex items-center gap-1 rounded-md border border-slate-600 bg-slate-800/95 px-2 py-1 text-[0.65rem] text-slate-200 active:bg-slate-700"
+                    className="touch-manipulation flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 text-[0.65rem] text-gray-800 shadow-sm active:bg-gray-50"
                     onClick={() => setSelectedZone({ zone: 'graveyard', player: playerNumber })}
                   >
-                    <span className="text-slate-400">墓</span>
-                    <span className="font-bold text-white">{myState.graveyard.length}</span>
+                    <span className="text-gray-500">墓</span>
+                    <span className="font-semibold text-gray-900">{myState.graveyard.length}</span>
                   </button>
                 </div>
               </div>
@@ -898,7 +898,7 @@ export function GameBoardNew({
                   />
                   <button
                     type="button"
-                    className="text-[0.65rem] text-slate-400 underline decoration-slate-500"
+                    className="text-[0.65rem] text-[#0071e3] underline decoration-gray-300"
                     onClick={() => openManaModal(playerNumber)}
                   >
                     マナ操作（タップ等）
@@ -910,7 +910,7 @@ export function GameBoardNew({
                     title="手札をドロップしてシールドゾーンに置けます"
                     className={`hidden w-full max-w-3xl justify-end px-2 transition-[box-shadow] lg:flex ${
                       shieldDropHover && canInteractHand
-                        ? 'rounded-md ring-2 ring-green-400 ring-offset-2 ring-offset-slate-900'
+                        ? 'rounded-md ring-2 ring-[#0071e3]/30 ring-offset-2 ring-offset-white'
                         : ''
                     }`}
                     onDragOver={canInteractHand ? onShieldDragOver : undefined}
@@ -920,34 +920,34 @@ export function GameBoardNew({
                     <button
                       type="button"
                       onClick={() => setSelectedZone({ zone: 'shields', player: playerNumber })}
-                      className="flex min-h-[2.25rem] items-center gap-1.5 rounded-md border border-slate-600 bg-slate-800/95 px-2 py-1 text-left text-[0.65rem] text-slate-200 shadow-sm transition hover:border-green-400/60 hover:bg-slate-800"
+                      className="flex min-h-[2.25rem] items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-1 text-left text-[0.65rem] text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
                     >
-                      <Shield className="h-3.5 w-3.5 shrink-0 text-[var(--sp-brass)]" />
+                      <Shield className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                       <div className="flex flex-col leading-tight">
-                        <span className="text-[0.55rem] font-bold text-slate-400">シールド</span>
-                        <span className="text-sm font-black text-white">{myState.shields.length}枚</span>
+                        <span className="text-[0.55rem] font-semibold text-gray-500">シールド</span>
+                        <span className="text-sm font-semibold text-gray-900">{myState.shields.length}枚</span>
                       </div>
                     </button>
                   </div>
 
-                  <div className="hidden flex-wrap items-center justify-center gap-3 text-xs text-slate-200 sm:gap-5 lg:flex">
+                  <div className="hidden flex-wrap items-center justify-center gap-3 text-xs text-gray-800 sm:gap-5 lg:flex">
                     <button
                       type="button"
-                      className="flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800/80 px-2 py-1 hover:bg-slate-700"
+                      className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50"
                       onClick={() => setSelectedZone({ zone: 'deck', player: playerNumber })}
                     >
-                      <span className="text-slate-400">山</span>
-                      <span className="font-bold">{myState.deck.length}</span>
+                      <span className="text-gray-500">山</span>
+                      <span className="font-semibold">{myState.deck.length}</span>
                     </button>
-                    <div className="flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800/80 px-2 py-1">
-                      <span className="text-slate-400">手</span>
-                      <span className="font-bold">{myState.hand.length}</span>
+                    <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm">
+                      <span className="text-gray-500">手</span>
+                      <span className="font-semibold">{myState.hand.length}</span>
                     </div>
                     <div
                       title="手札をドロップして墓地に置けます"
                       className={`rounded-lg transition-[box-shadow] ${
                         graveyardDropHover && canInteractHand
-                          ? 'ring-2 ring-violet-400 ring-offset-2 ring-offset-slate-900'
+                          ? 'ring-2 ring-gray-400/50 ring-offset-2 ring-offset-white'
                           : ''
                       }`}
                       onDragOver={canInteractHand ? onGraveyardDragOver : undefined}
@@ -956,22 +956,22 @@ export function GameBoardNew({
                     >
                       <button
                         type="button"
-                        className="flex h-full min-h-[2rem] w-full items-center gap-1 rounded-lg border border-slate-600 bg-slate-800/80 px-2 py-1 hover:bg-slate-700"
+                        className="flex h-full min-h-[2rem] w-full items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm hover:bg-gray-50"
                         onClick={() => setSelectedZone({ zone: 'graveyard', player: playerNumber })}
                       >
-                        <span className="text-slate-400">墓</span>
-                        <span className="font-bold">{myState.graveyard.length}</span>
+                        <span className="text-gray-500">墓</span>
+                        <span className="font-semibold">{myState.graveyard.length}</span>
                       </button>
                     </div>
                   </div>
 
                   <div className="relative w-full max-w-3xl px-2 lg:mx-auto">
-                    <div className="mb-1 text-center text-[0.65rem] font-bold uppercase tracking-wide text-slate-500">
+                    <div className="mb-1 text-center text-[0.65rem] font-semibold uppercase tracking-wide text-gray-500">
                       Hand
                     </div>
                     <div className="mx-auto flex min-h-[100px] w-full max-w-full items-end justify-center px-0 pb-1 lg:min-h-[130px]">
                       {myState.hand.length === 0 ? (
-                        <span className="text-sm text-slate-500">手札なし</span>
+                        <span className="text-sm text-gray-500">手札なし</span>
                       ) : (
                         myState.hand.map((card, i) => {
                           const n = myState.hand.length;
@@ -1007,7 +1007,7 @@ export function GameBoardNew({
                               <button
                                 type="button"
                                 title="カード詳細"
-                                className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-500/80 bg-slate-900/95 text-green-300 shadow-md hover:bg-slate-800 hover:text-white"
+                                className="absolute -right-0.5 -top-0.5 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-[#0071e3] shadow-md hover:bg-gray-50"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -1019,7 +1019,7 @@ export function GameBoardNew({
                               </button>
                               <CardImage
                                 card={card}
-                                className={`pointer-events-none w-full rounded-lg border-2 border-emerald-500/70 shadow-lg ${
+                                className={`pointer-events-none w-full rounded-lg border border-gray-200 shadow-md ${
                                   !canInteractHand ? 'grayscale' : ''
                                 }`}
                                 draggable={false}
@@ -1031,7 +1031,7 @@ export function GameBoardNew({
                     </div>
                     <button
                       type="button"
-                      className="mx-auto mt-1 block text-[0.65rem] text-slate-500 underline"
+                      className="mx-auto mt-1 block text-[0.65rem] text-[#0071e3] underline decoration-gray-300"
                       onClick={() => setSelectedZone({ zone: 'hand', player: playerNumber })}
                     >
                       手札を一覧・詳細操作
@@ -1040,7 +1040,7 @@ export function GameBoardNew({
                 </div>
 
                 {/* スマホ: 左下＝マナ / 右下＝ターン終了・ドロー・マナチャージ */}
-                <div className="flex w-full flex-row items-end justify-between gap-2 border-t border-slate-700/50 pt-2 lg:hidden">
+                <div className="flex w-full flex-row items-end justify-between gap-2 border-t border-gray-200 pt-2 lg:hidden">
                   <div className="-ml-0.5 flex shrink-0 scale-[0.86] flex-col items-center gap-0.5 origin-bottom-left sm:ml-0 sm:scale-[0.92]">
                     <ManaZoneGauge
                       manaCards={myState.mana}
@@ -1051,7 +1051,7 @@ export function GameBoardNew({
                     />
                     <button
                       type="button"
-                      className="max-w-[5rem] text-center text-[0.55rem] text-slate-400 underline decoration-slate-500 touch-manipulation"
+                      className="max-w-[5rem] touch-manipulation text-center text-[0.55rem] text-[#0071e3] underline decoration-gray-300"
                       onClick={() => openManaModal(playerNumber)}
                     >
                       マナ操作
@@ -1063,7 +1063,7 @@ export function GameBoardNew({
                         type="button"
                         onClick={onEndTurn}
                         disabled={!isMyTurn}
-                        className="w-full touch-manipulation rounded-md bg-green-600 px-2 py-2.5 text-[0.7rem] font-semibold leading-tight text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40 hover:bg-green-700 sm:text-xs"
+                        className="w-full touch-manipulation rounded-full bg-[#0071e3] px-2 py-2.5 text-[0.7rem] font-semibold leading-tight text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#0077ed] sm:text-xs"
                         style={{ clipPath: 'polygon(12% 0%, 88% 0%, 100% 50%, 88% 100%, 12% 100%, 0% 50%)' }}
                       >
                         TURN END
@@ -1083,7 +1083,7 @@ export function GameBoardNew({
                         type="button"
                         onClick={onEndTurn}
                         disabled={!isMyTurn}
-                        className="w-full min-w-[120px] touch-manipulation rounded-md bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40 sm:py-4 sm:text-base"
+                        className="w-full min-w-[120px] touch-manipulation rounded-full bg-[#0071e3] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0077ed] disabled:cursor-not-allowed disabled:opacity-40 sm:py-4 sm:text-base"
                         style={{ clipPath: 'polygon(12% 0%, 88% 0%, 100% 50%, 88% 100%, 12% 100%, 0% 50%)' }}
                       >
                         TURN END
@@ -1104,20 +1104,20 @@ export function GameBoardNew({
       {handManaMenu && canInteractHand && (
         <div
           id="hand-action-float-menu"
-          className="fixed z-[100] max-w-[min(100vw-1rem,220px)] rounded-lg border border-slate-600 bg-slate-900/98 p-2 shadow-2xl shadow-black/50"
+          className="fixed z-[100] max-w-[min(100vw-1rem,220px)] rounded-xl border border-gray-200 bg-white/98 p-2 shadow-xl shadow-black/10"
           style={{
             left: handManaMenu.anchor.left + handManaMenu.anchor.width / 2,
             top: handManaMenu.anchor.top - 8,
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <p className="mb-2 border-b border-slate-600 pb-1 text-center text-[0.65rem] font-bold text-slate-400">
+          <p className="mb-2 border-b border-gray-200 pb-1 text-center text-[0.65rem] font-semibold text-gray-500">
             移動先を選択
           </p>
           <div className="flex flex-col gap-1">
             <button
               type="button"
-              className="rounded-md border border-slate-500 bg-slate-800 px-2 py-1.5 text-left text-xs font-semibold text-slate-200 hover:bg-slate-700"
+              className="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-left text-xs font-medium text-gray-800 hover:bg-gray-100"
               onClick={(e) => {
                 e.stopPropagation();
                 setCardDetailModal(handManaMenu.card);
@@ -1127,7 +1127,7 @@ export function GameBoardNew({
             </button>
             <button
               type="button"
-              className="rounded-md bg-green-600 px-2 py-1.5 text-left text-xs font-bold text-white hover:bg-green-500"
+              className="rounded-lg bg-[#0071e3] px-2 py-1.5 text-left text-xs font-semibold text-white hover:bg-[#0077ed]"
               onClick={(e) => {
                 e.stopPropagation();
                 placeHandCardToZone(handManaMenu.card, 'mana');
@@ -1137,7 +1137,7 @@ export function GameBoardNew({
             </button>
             <button
               type="button"
-              className="rounded-md bg-emerald-700 px-2 py-1.5 text-left text-xs font-bold text-white hover:bg-emerald-600"
+              className="rounded-lg bg-gray-800 px-2 py-1.5 text-left text-xs font-semibold text-white hover:bg-gray-700"
               onClick={(e) => {
                 e.stopPropagation();
                 placeHandCardToZone(handManaMenu.card, 'battle');
@@ -1147,7 +1147,7 @@ export function GameBoardNew({
             </button>
             <button
               type="button"
-              className="rounded-md bg-violet-800 px-2 py-1.5 text-left text-xs font-bold text-white hover:bg-violet-700"
+              className="rounded-lg bg-gray-600 px-2 py-1.5 text-left text-xs font-semibold text-white hover:bg-gray-500"
               onClick={(e) => {
                 e.stopPropagation();
                 placeHandCardToZone(handManaMenu.card, 'graveyard');
@@ -1157,7 +1157,7 @@ export function GameBoardNew({
             </button>
             <button
               type="button"
-              className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1.5 text-left text-xs font-semibold text-slate-200 hover:bg-slate-700"
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-left text-xs font-medium text-gray-800 hover:bg-gray-50"
               onClick={(e) => {
                 e.stopPropagation();
                 placeHandCardToZone(handManaMenu.card, 'shields');
@@ -1224,7 +1224,7 @@ export function GameBoardNew({
       <CardDetailModal card={cardDetailModal} onClose={() => setCardDetailModal(null)} />
 
       {gameState.gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[2px]">
           <div className="sp-modal-surface max-w-md rounded-lg p-8 text-center">
             <h2 className="sp-display mb-4 text-3xl font-semibold text-[var(--sp-ink)]">
               {gameState.winner === playerNumber ? '勝利！' : '敗北'}
