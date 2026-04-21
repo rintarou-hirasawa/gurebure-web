@@ -34,6 +34,20 @@ function getStoredUser(): User | null {
 
 /** Supabase セッション（Google 等）と localStorage（ID/パスワード）の両方を解決 */
 export async function loadUserFromStorageAndSession(): Promise<User | null> {
+  if (typeof window !== 'undefined') {
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (code) {
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error('OAuth PKCE exchange', error);
+        }
+      } catch (e) {
+        console.error('OAuth PKCE exchange', e);
+      }
+    }
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();

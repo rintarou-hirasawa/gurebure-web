@@ -28,16 +28,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
-    const u = await loadUserFromStorageAndSession();
-    setUser(u);
+    try {
+      const u = await loadUserFromStorageAndSession();
+      setUser(u);
+    } catch (e) {
+      console.error('refreshUser', e);
+      setUser(null);
+    }
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      await refreshUser();
-      if (!cancelled) setLoading(false);
+      try {
+        await refreshUser();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
@@ -54,8 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (session?.user) {
-        const u = await ensurePublicUserRow(session.user);
-        setUser(u);
+        try {
+          const u = await ensurePublicUserRow(session.user);
+          setUser(u);
+        } catch (e) {
+          console.error('onAuthStateChange ensurePublicUserRow', e);
+        }
       }
     });
     return () => subscription.unsubscribe();

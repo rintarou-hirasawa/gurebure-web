@@ -53,6 +53,14 @@ export function LoginPage() {
     }
   }, [location.search, location.hash, navigate]);
 
+  /** PKCE 処理後も URL に ?code= が残ると再試行や表示がおかしくなるので、読み込み完了後にクエリだけ外す */
+  useEffect(() => {
+    if (authLoading) return;
+    const q = new URLSearchParams(location.search);
+    if (!q.has('code')) return;
+    navigate({ pathname: '/login', search: '' }, { replace: true });
+  }, [authLoading, location.search, navigate]);
+
   useEffect(() => {
     if (!authLoading && user) {
       navigate(takePostLoginRedirectPath(), { replace: true });
