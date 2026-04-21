@@ -3,6 +3,7 @@ import { Star, Sword, Zap, Shield, Info, Wrench, Gem, Package } from 'lucide-rea
 import { GameState, CardInGame, Zone } from '../../types/game';
 import { ZoneActionModal } from './ZoneActionModal';
 import { GameLogEntry } from '../../types/room';
+import { CardImage } from '../CardImage';
 
 interface GameBoardNewProps {
   gameState: GameState;
@@ -742,16 +743,9 @@ export function GameBoardNew({
                       }}
                     >
                       <div className={battleCardWrapClass}>
-                        <img
-                          src={card.image_url || '/image.png'}
-                          alt={card.name}
+                        <CardImage
+                          card={card}
                           className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== '/image.png') {
-                              target.src = '/image.png';
-                            }
-                          }}
                         />
                         {renderBattleZoneCardMarks(card)}
                       </div>
@@ -789,16 +783,9 @@ export function GameBoardNew({
                       }}
                     >
                       <div className={battleCardWrapClass}>
-                        <img
-                          src={card.image_url || '/image.png'}
-                          alt={card.name}
+                        <CardImage
+                          card={card}
                           className={`${battleCardImgClass} pointer-events-none border-2 ${card.tapped ? 'rotate-90' : ''} border-slate-500 hover:border-green-400/80 transition-all`}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== '/image.png') {
-                              target.src = '/image.png';
-                            }
-                          }}
                         />
                         {renderBattleZoneCardMarks(card)}
                       </div>
@@ -990,17 +977,12 @@ export function GameBoardNew({
                               >
                                 <Info className="h-4 w-4" strokeWidth={2.5} />
                               </button>
-                              <img
-                                src={card.image_url || '/image.png'}
-                                alt={card.name}
+                              <CardImage
+                                card={card}
                                 className={`pointer-events-none w-full rounded-lg border-2 border-emerald-500/70 shadow-lg ${
                                   !canInteractHand ? 'grayscale' : ''
                                 }`}
                                 draggable={false}
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  if (target.src !== '/image.png') target.src = '/image.png';
-                                }}
                               />
                             </div>
                           );

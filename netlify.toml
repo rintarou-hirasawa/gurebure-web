@@ -1,8 +1,9 @@
-# Netlify: Vite のビルド結果を公開し、SPA のクライアントルーティング用にリライトする
+# Netlify 用（Vite + React Router）
 [build]
   command = "npm run build"
   publish = "dist"
 
+# クライアント側ルーティング（/login などを直接開いても 404 にしない）
 [[redirects]]
   from = "/*"
   to = "/index.html"

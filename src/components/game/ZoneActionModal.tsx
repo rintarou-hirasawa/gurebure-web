@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Star, Sword, Zap, Shield } from 'lucide-react';
 import { CardInGame, Zone } from '../../types/game';
+import { CardImage } from '../CardImage';
 
 interface ZoneActionModalProps {
   isOpen: boolean;
@@ -111,18 +112,11 @@ export function ZoneActionModal({
                         isSelected ? 'ring-1 ring-black/25' : ''
                       }`}
                     >
-                      <img
-                        src={card.image_url || '/image.png'}
-                        alt={card.name}
+                      <CardImage
+                        card={card}
                         className={`w-full rounded transition-[filter,opacity] duration-200 ${
                           isSelected ? 'brightness-[0.48] contrast-[1.05] opacity-90' : ''
                         }`}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          if (target.src !== '/image.png') {
-                            target.src = '/image.png';
-                          }
-                        }}
                       />
                       {isSelected && (
                         <div
@@ -143,9 +137,9 @@ export function ZoneActionModal({
                             <Star className="w-3 h-3 text-yellow-900 fill-yellow-900" />
                           </div>
                         )}
-                        {getCardTypeIcon(card.type) && (
+                        {getCardTypeIcon(card.type ?? card.card_type ?? '') && (
                           <div className="bg-white rounded-full p-0.5">
-                            {getCardTypeIcon(card.type)}
+                            {getCardTypeIcon(card.type ?? card.card_type ?? '')}
                           </div>
                         )}
                       </div>

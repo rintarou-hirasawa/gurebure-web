@@ -1,17 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Card, SearchFilters, POWER_FILTER_MIN, POWER_FILTER_MAX } from '../types/card';
+
+function formatFetchError(err: unknown): string {
+  if (err && typeof err === 'object' && err !== null && 'message' in err) {
+    const e = err as {
+      message: string;
+      details?: string;
+      hint?: string;
+      code?: string;
+    };
+    const parts = [e.message];
+    if (e.code) parts.push(`code: ${e.code}`);
+    if (e.details) parts.push(e.details);
+    if (e.hint) parts.push(`hint: ${e.hint}`);
+    return parts.join(' — ');
+  }
+  if (err instanceof Error) return err.message;
+  return 'Failed to fetch cards';
+}
 
 export function useCards(filters: SearchFilters) {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCards();
-  }, [filters]);
-
-  async function fetchCards() {
+  const fetchCards = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -62,7 +76,7 @@ export function useCards(filters: SearchFilters) {
 
       if (fetchError) throw fetchError;
 
-      let list = data || [];
+      let list = (data || []) as Card[];
 
       if (filters.raceComplexity === 'multi') {
         list = list.filter(c => c.race && c.race.includes('/'));
@@ -71,13 +85,20 @@ export function useCards(filters: SearchFilters) {
       }
 
       setCards(list);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch cards');
+    } catch (err: unknown) {
+      setError(formatFetchError(err));
       console.error('Error fetching cards:', err);
     } finally {
       setLoading(false);
     }
-  }
+  }, [filters]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      void fetchCards();
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, [fetchCards]);
 
   return { cards, loading, error };
 }

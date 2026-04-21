@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ArrowLeft } from 'lucide-react';
 import { useDeck } from '../hooks/useDeck';
-import { getCurrentUser } from '../lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CreateRoomPage() {
   const [password, setPassword] = useState('');
@@ -11,7 +11,7 @@ export default function CreateRoomPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user } = useAuth();
   const { decks, refreshDecks } = useDeck();
 
   useEffect(() => {

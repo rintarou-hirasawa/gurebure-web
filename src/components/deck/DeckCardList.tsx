@@ -1,5 +1,6 @@
 import { DeckCard } from '../../types/deck';
 import { Star, X } from 'lucide-react';
+import { CardImage } from '../CardImage';
 
 interface DeckCardListProps {
   deckCards: DeckCard[];
@@ -67,17 +68,7 @@ export default function DeckCardList({
       {slots.map(({ deckCardId, card, key }) => (
         <div key={key} className="group relative min-h-0 min-w-0" title={card.name}>
           <div className={thumbClassForSlot(compact)}>
-            <img
-              src={card.image_url || '/image.png'}
-              alt={card.name}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (target.src !== '/image.png') {
-                  target.src = '/image.png';
-                }
-              }}
-            />
+            <CardImage card={card} className="h-full w-full object-cover" />
             {card.is_unique && (
               <div
                 className={`pointer-events-none absolute left-0.5 top-0.5 flex items-center gap-0.5 rounded bg-amber-500/95 shadow-sm ring-1 ring-amber-700/40 ${compact ? 'p-0.5' : 'px-1 py-0.5 sm:left-1 sm:top-1 sm:px-1.5 sm:py-0.5'}`}

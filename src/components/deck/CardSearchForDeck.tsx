@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { Card, DEFAULT_SEARCH_FILTERS, SearchFilters } from '../../types/card';
 import { useCards } from '../../hooks/useCards';
+import { CardImage } from '../CardImage';
 import DeckFilterModal from './DeckFilterModal';
 
 interface CardSearchForDeckProps {
@@ -81,17 +82,7 @@ export default function CardSearchForDeck({ onAddCard, className = '' }: CardSea
                 className="min-w-0 text-left"
               >
                 <div className="relative aspect-[63/88] w-full overflow-hidden rounded border-2 border-green-200 bg-white shadow-sm transition-transform hover:border-green-500 hover:shadow-md active:scale-95">
-                  <img
-                    src={card.image_url || '/image.png'}
-                    alt={card.name}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      if (target.src !== '/image.png') {
-                        target.src = '/image.png';
-                      }
-                    }}
-                  />
+                  <CardImage card={card} className="h-full w-full object-cover" />
                 </div>
                 <p className="mt-1 line-clamp-2 text-[10px] leading-tight text-[var(--sp-muted)] sm:text-xs">
                   {card.name}

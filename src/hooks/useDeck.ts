@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Deck, DeckCard, DeckStats } from '../types/deck';
 import { Card } from '../types/card';
-import { getCurrentUser } from '../lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 export function useDeck(deckId?: string | null) {
+  const { user: authUser } = useAuth();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [deck, setDeck] = useState<Deck | null>(null);
   const [deckCards, setDeckCards] = useState<DeckCard[]>([]);
@@ -19,12 +20,12 @@ export function useDeck(deckId?: string | null) {
     } else {
       loadAllDecks();
     }
-  }, [deckId]);
+  }, [deckId, authUser?.id]);
 
   const loadAllDecks = async () => {
     try {
       setLoading(true);
-      const user = getCurrentUser();
+      const user = authUser;
 
       const query = supabase
         .from('decks')
@@ -90,7 +91,7 @@ export function useDeck(deckId?: string | null) {
 
   const createDeck = async (name: string = ''): Promise<string | null> => {
     try {
-      const user = getCurrentUser();
+      const user = authUser;
       if (!user) {
         setError('デッキを保存するにはログインが必要です');
         return null;
@@ -283,7 +284,7 @@ export function useDeck(deckId?: string | null) {
   const deleteDeck = async (
     targetId: string
   ): Promise<{ ok: boolean; wasCurrent: boolean; nextDeckId: string | null }> => {
-    const user = getCurrentUser();
+    const user = authUser;
     if (!user) {
       setError('デッキを削除するにはログインが必要です');
       return { ok: false, wasCurrent: false, nextDeckId: null };

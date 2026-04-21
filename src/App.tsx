@@ -8,11 +8,18 @@ import CreateRoomPage from './pages/CreateRoomPage';
 import JoinRoomPage from './pages/JoinRoomPage';
 import LobbyPage from './pages/LobbyPage';
 import { LoginPage } from './pages/LoginPage';
-import { getCurrentUser, logout } from './lib/auth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = getCurrentUser();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--sp-muted)]">
+        読み込み中…
+      </div>
+    );
+  }
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -21,7 +28,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 /** 本番はログイン必須。開発時は UI / デバッグのため未ログインでもオンライン対戦フローに入れる */
 function OnlineFlowRoute({ children }: { children: React.ReactNode }) {
-  const user = getCurrentUser();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--sp-muted)]">
+        読み込み中…
+      </div>
+    );
+  }
   if (!user && !import.meta.env.DEV) {
     return <Navigate to="/login" replace />;
   }
@@ -30,11 +44,10 @@ function OnlineFlowRoute({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user, logoutUser } = useAuth();
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    void logoutUser().then(() => navigate('/login'));
   };
 
   return (
@@ -162,12 +175,14 @@ function AppShellWithHeader() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/*" element={<AppShellWithHeader />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/*" element={<AppShellWithHeader />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

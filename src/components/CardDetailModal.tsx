@@ -1,6 +1,8 @@
 import { X, Download, Star } from 'lucide-react';
 import { Card } from '../types/card';
 import { useEffect } from 'react';
+import { CardImage } from './CardImage';
+import { getCardImageSrc } from '../lib/cardImage';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -31,11 +33,11 @@ export default function CardDetailModal({ card, onClose }: CardDetailModalProps)
 
   if (!card) return null;
 
-  const imageUrl = card.image_url || '/image.png';
+  const downloadSrc = getCardImageSrc(card);
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(downloadSrc);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -91,16 +93,9 @@ export default function CardDetailModal({ card, onClose }: CardDetailModalProps)
         <div className="p-6">
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <img
-                src={imageUrl}
-                alt={card.name}
+              <CardImage
+                card={card}
                 className="w-full rounded-lg border border-[var(--sp-border)] shadow-sm"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== '/image.png') {
-                    target.src = '/image.png';
-                  }
-                }}
               />
             </div>
 

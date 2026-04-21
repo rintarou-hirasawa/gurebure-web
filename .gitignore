@@ -21,3 +21,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Supabase CLI のローカルキャッシュ（プロジェクト再作成後は古い ref が残る）
+supabase/.temp/

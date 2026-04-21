@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Users, Search, ArrowLeft } from 'lucide-react';
-import { getCurrentUser } from '../lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 export function MatchmakingPage() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user } = useAuth();
   const devWithoutLogin = import.meta.env.DEV && !user;
 
   return (

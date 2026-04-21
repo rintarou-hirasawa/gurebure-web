@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { DeckCard } from '../../types/deck';
+import { CardImage } from '../CardImage';
 
 interface DeckListModalProps {
   isOpen: boolean;
@@ -51,25 +52,10 @@ export default function DeckListModal({
                     key={`${deckCard.card!.id}-${idx}`}
                     className="aspect-[63/88] w-[11vw] overflow-hidden rounded-sm border border-[var(--sp-border)] bg-[var(--sp-panel-elevated)] shadow-sm sm:w-[8vw] md:w-[7vw] lg:w-[6vw]"
                   >
-                    {deckCard.card!.image_url ? (
-                      <img
-                        src={deckCard.card!.image_url}
-                        alt={deckCard.card!.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          if (target.src !== '/image.png') {
-                            target.src = '/image.png';
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-0.5">
-                        <div className="line-clamp-4 text-center text-[7px] text-[var(--sp-muted)] sm:text-[6px]">
-                          {deckCard.card!.name}
-                        </div>
-                      </div>
-                    )}
+                    <CardImage
+                      card={deckCard.card!}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                 ))
               )}
