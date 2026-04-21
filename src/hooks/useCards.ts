@@ -87,6 +87,7 @@ export function useCards(filters: SearchFilters) {
 
       setCards(list);
     } catch (err: unknown) {
+      setCards([]);
       setError(formatFetchError(err));
       console.error('Error fetching cards:', err);
     } finally {

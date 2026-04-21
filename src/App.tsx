@@ -117,7 +117,7 @@ function AppShellWithHeader() {
         <Header />
       </div>
       <main
-        className={`flex min-h-0 flex-1 flex-col ${deckRoute ? 'overflow-hidden' : 'overflow-y-auto'}`}
+        className={`flex min-h-0 flex-1 flex-col ${deckRoute ? 'overflow-y-auto overflow-x-hidden' : 'overflow-y-auto'}`}
       >
         <Routes>
         <Route

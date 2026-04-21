@@ -123,7 +123,7 @@ export default function DeckBuilder() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-[var(--sp-bg)]">
+    <div className="flex min-h-0 flex-1 flex-col bg-[var(--sp-bg)] lg:overflow-hidden">
       <DeckHeader
         key={currentDeckId ?? 'no-deck'}
         deckName={deck?.name ?? ''}
@@ -139,7 +139,7 @@ export default function DeckBuilder() {
         }
       />
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col overflow-hidden px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4 lg:min-h-0 lg:overflow-hidden">
         <div className="mb-1.5 mt-1.5 flex shrink-0 flex-wrap gap-2 sm:mb-2 sm:mt-2">
           <button
             type="button"
@@ -214,11 +214,12 @@ export default function DeckBuilder() {
         )}
 
         {/*
-          モバイル: 縦 flex で「デッキ → カード追加」に残り高さを必ず割り当てる（grid + min-h だけだと検索側が高さ0になり非表示になる）。
-          デスクトップ: 従来どおり 2 カラムグリッド。
+          モバイル: CSS Grid で 2 行目を minmax(0,1fr) にし、カード検索エリアに必ず高さを割り当てる。
+          main は overflow-y-auto のため、万一内部 flex が潰れてもページスクロールで到達可能。
+          デスクトップ: 2 カラム 1 行。
         */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:[grid-template-rows:minmax(0,1fr)]">
-          <section className="flex max-h-[min(40vh,320px)] min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-green-200 bg-white lg:max-h-none lg:min-h-0 lg:shrink">
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-3 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-2 lg:grid-rows-1 lg:items-stretch lg:gap-4 lg:[grid-template-rows:minmax(0,1fr)]">
+          <section className="flex max-h-[min(40vh,320px)] min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-green-200 bg-white lg:max-h-none lg:min-h-0">
             <div className="shrink-0 border-b border-green-100 bg-green-50/80 px-2 py-1.5 text-xs font-medium text-green-900 sm:px-3 sm:text-sm">
               デッキリスト（{stats.totalCards}枚）
             </div>
@@ -234,7 +235,7 @@ export default function DeckBuilder() {
             </div>
           </section>
 
-          <section className="flex min-h-[12rem] flex-1 flex-col overflow-hidden lg:min-h-0">
+          <section className="flex min-h-0 flex-col overflow-hidden">
             <CardSearchForDeck onAddCard={addCardToDeck} className="flex h-full min-h-0 flex-1 flex-col overflow-hidden" />
           </section>
         </div>

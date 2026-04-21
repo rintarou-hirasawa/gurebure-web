@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, ArrowDownUp } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, SlidersHorizontal, ArrowDownUp } from 'lucide-react';
 import { Card, DEFAULT_SEARCH_FILTERS, SearchFilters } from '../../types/card';
 import { useCards } from '../../hooks/useCards';
 import { CardImage } from '../CardImage';
@@ -39,9 +39,8 @@ export default function CardSearchForDeck({ onAddCard, className = '' }: CardSea
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('server');
-  const carouselRef = useRef<HTMLDivElement>(null);
 
-  const { cards, loading } = useCards(filters);
+  const { cards, loading, error } = useCards(filters);
 
   const sortedCards = useMemo(() => sortCards(cards, sortMode), [cards, sortMode]);
 
@@ -55,13 +54,6 @@ export default function CardSearchForDeck({ onAddCard, className = '' }: CardSea
     }, 350);
     return () => clearTimeout(t);
   }, [searchDraft]);
-
-  const scrollCarousel = (dir: -1 | 1) => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const w = Math.max(160, el.clientWidth * 0.45);
-    el.scrollBy({ left: dir * w, behavior: 'smooth' });
-  };
 
   const cycleSort = () => {
     setSortMode((m) => {
@@ -79,119 +71,93 @@ export default function CardSearchForDeck({ onAddCard, className = '' }: CardSea
           ? 'コスト↓'
           : '名前順';
 
-  const renderCardTile = (card: Card, size: 'grid' | 'carousel') => (
-    <button
-      key={card.id}
-      type="button"
-      onClick={() => onAddCard(card)}
-      className={`min-w-0 text-left ${size === 'carousel' ? 'w-[min(42vw,10.5rem)] shrink-0 snap-start' : ''}`}
-    >
-      <div
-        className={`relative overflow-hidden rounded border-2 border-green-200 bg-white shadow-sm transition-transform hover:border-green-500 hover:shadow-md active:scale-95 ${
-          size === 'carousel' ? 'aspect-[63/88] w-full' : 'aspect-[63/88] w-full'
-        }`}
-      >
+  const renderCardTile = (card: Card) => (
+    <button key={card.id} type="button" onClick={() => onAddCard(card)} className="min-w-0 text-left">
+      <div className="relative aspect-[63/88] w-full overflow-hidden rounded border-2 border-green-200 bg-white shadow-sm transition-transform hover:border-green-500 hover:shadow-md active:scale-95">
         <CardImage card={card} className="h-full w-full object-cover" />
       </div>
-      <p
-        className={`mt-1 line-clamp-2 text-[var(--sp-muted)] ${size === 'carousel' ? 'text-[10px] leading-tight' : 'text-[10px] leading-tight sm:text-xs'}`}
-      >
+      <p className="mt-1 line-clamp-2 text-[10px] leading-tight text-[var(--sp-muted)] sm:text-xs">
         {card.name}
       </p>
     </button>
   );
 
-  const emptyOrLoading = (minClass: string) =>
+  const searchRow = (
+    <div className="flex flex-wrap items-end gap-2">
+      <div className="relative min-w-0 flex-1 basis-[min(100%,12rem)]">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />
+        <input
+          type="text"
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              setFilters((f) => ({ ...f, searchText: searchDraft }));
+            }
+          }}
+          placeholder="カード名"
+          className="w-full rounded-md border border-emerald-700 bg-white py-2 pl-9 pr-3 text-sm text-emerald-950 placeholder:text-emerald-600/70 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-400"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={() => setFilterModalOpen(true)}
+        className="flex h-11 w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border border-green-500 bg-green-600 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-green-500 sm:h-11 sm:w-11"
+        title="絞り込み"
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+        <span className="leading-none">絞り込み</span>
+      </button>
+      <button
+        type="button"
+        onClick={cycleSort}
+        className="flex h-11 w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border border-green-500 bg-green-600 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-green-500 sm:h-11 sm:w-11"
+        title={sortLabel}
+      >
+        <ArrowDownUp className="h-4 w-4" />
+        <span className="leading-none">{sortLabel}</span>
+      </button>
+    </div>
+  );
+
+  const cardBody =
     loading ? (
-      <div className={`flex ${minClass} items-center justify-center text-sm text-[var(--sp-muted)]`}>
+      <div className="flex min-h-[8rem] items-center justify-center text-sm text-[var(--sp-muted)]">
         読み込み中…
       </div>
+    ) : error ? (
+      <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        カードを読み込めませんでした。通信またはデータベースの設定を確認してください。
+        <br />
+        <span className="mt-1 block font-mono text-xs opacity-90">{error}</span>
+      </div>
     ) : sortedCards.length === 0 ? (
-      <div className={`flex ${minClass} items-center justify-center px-2 text-center text-sm text-[var(--sp-muted)]`}>
+      <div className="flex min-h-[8rem] items-center justify-center px-2 text-center text-sm text-[var(--sp-muted)]">
         条件に合うカードがありません
       </div>
-    ) : null;
+    ) : (
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {sortedCards.map((card) => renderCardTile(card))}
+      </div>
+    );
 
   return (
     <div
       className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm ${className}`}
     >
-      {/* デスクトップ: 見出し */}
       <div className="hidden shrink-0 border-b border-green-100 bg-green-50/80 px-2 py-1.5 text-xs font-medium text-green-900 sm:px-3 sm:text-sm lg:block">
         カード検索・追加
       </div>
 
-      {/* モバイル: 中段カルーセル（残り高さをすべて使用） */}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-        {emptyOrLoading('min-h-[9rem] flex-1')}
-        {!loading && sortedCards.length > 0 && (
-          <div className="flex min-h-0 flex-1 items-stretch gap-1 px-1 py-2">
-            <button
-              type="button"
-              onClick={() => scrollCarousel(-1)}
-              className="flex w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-white text-green-800 shadow-sm active:bg-green-50"
-              aria-label="前へ"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <div
-              ref={carouselRef}
-              className="flex min-h-[9rem] flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain py-1 [-webkit-overflow-scrolling:touch]"
-            >
-              {sortedCards.map((card) => renderCardTile(card, 'carousel'))}
-            </div>
-            <button
-              type="button"
-              onClick={() => scrollCarousel(1)}
-              className="flex w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-white text-green-800 shadow-sm active:bg-green-50"
-              aria-label="次へ"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* モバイル: 下部バー（検索・絞り込み・並べ替え） */}
-      <div className="shrink-0 border-t border-green-200 bg-emerald-950 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="relative min-w-0 flex-1 basis-[min(100%,12rem)]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />
-            <input
-              type="text"
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setFilters((f) => ({ ...f, searchText: searchDraft }));
-                }
-              }}
-              placeholder="カード名"
-              className="w-full rounded-md border border-emerald-700 bg-white py-2 pl-9 pr-3 text-sm text-emerald-950 placeholder:text-emerald-600/70 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-400"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setFilterModalOpen(true)}
-            className="flex h-11 w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border border-green-500 bg-green-600 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-green-500"
-            title="絞り込み"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span className="leading-none">絞り込み</span>
-          </button>
-          <button
-            type="button"
-            onClick={cycleSort}
-            className="flex h-11 w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border border-green-500 bg-green-600 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-green-500"
-            title={sortLabel}
-          >
-            <ArrowDownUp className="h-4 w-4" />
-            <span className="leading-none">{sortLabel}</span>
-          </button>
+      {/* モバイル: 中段＝縦スクロールのグリッド（横カルーセルは iOS で高さ 0 になりやすいため廃止） */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-zinc-50/90 p-2">{cardBody}</div>
+        <div className="shrink-0 border-t border-green-200 bg-emerald-950 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {searchRow}
         </div>
       </div>
 
-      {/* デスクトップ: 検索行 + グリッド */}
+      {/* デスクトップ */}
       <div className="hidden min-h-0 flex-1 flex-col overflow-hidden lg:flex">
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-green-200 bg-emerald-950 px-2 py-2 sm:px-3">
           <div className="relative min-w-0 flex-1">
@@ -229,21 +195,7 @@ export default function CardSearchForDeck({ onAddCard, className = '' }: CardSea
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-zinc-50/90 p-2 sm:p-3">
-          {loading ? (
-            <div className="flex min-h-[8rem] items-center justify-center text-sm text-[var(--sp-muted)]">
-              読み込み中…
-            </div>
-          ) : sortedCards.length === 0 ? (
-            <div className="flex min-h-[8rem] items-center justify-center px-2 text-center text-sm text-[var(--sp-muted)]">
-              条件に合うカードがありません
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {sortedCards.map((card) => renderCardTile(card, 'grid'))}
-            </div>
-          )}
-        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-zinc-50/90 p-2 sm:p-3">{cardBody}</div>
       </div>
 
       <DeckFilterModal
